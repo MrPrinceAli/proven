@@ -1,40 +1,40 @@
-import {
-  IconAlert,
-  IconAward,
-  IconCheckBadge,
-  IconFile,
-  IconGlobe,
-  IconLink,
-  IconLock,
-  IconShield,
-  IconSparkles,
-} from "@proven/ui";
+import { IconAlert, IconAward, IconCheckBadge, IconLink, IconLock, IconSparkles } from "@proven/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { publicEnv } from "@/lib/env";
+import { site } from "@/lib/site";
 import { Logo } from "./Logo";
+import { LogoBnbChain, LogoDid, LogoEthereum, LogoHash, LogoOpenBadges, LogoW3C } from "./StandardLogos";
 
 const STANDARDS = [
-  "W3C Verifiable Credentials 2.0",
-  "EIP-712",
-  "BNB Smart Chain",
-  "did:ethr",
-  "SHA-256 · JCS",
-  "Open Badges 3.0",
+  { logo: LogoW3C, name: "Verifiable Credentials 2.0", note: "Standar W3C" },
+  { logo: LogoBnbChain, name: "BNB Smart Chain", note: "Jaringan anchor" },
+  { logo: LogoEthereum, name: "EIP-712", note: "Tanda tangan issuer" },
+  { logo: LogoDid, name: "did:ethr", note: "Identitas terdesentralisasi" },
+  { logo: LogoHash, name: "SHA-256 · JCS", note: "Integritas data" },
+  { logo: LogoOpenBadges, name: "Open Badges 3.0", note: "Format prestasi" },
 ];
 
 export function TrustStrip() {
   return (
-    <section aria-label="Standar terbuka" className="border-b border-line bg-white">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-6 sm:px-6 lg:flex-row lg:justify-between">
-        <p className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+    <section aria-labelledby="standar" className="border-b border-line bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <p id="standar" className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted">
           Dibangun di atas standar terbuka
         </p>
-        <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 lg:justify-end">
-          {STANDARDS.map((s) => (
-            <li key={s} className="flex items-center gap-2 text-sm font-medium text-ink/70">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
-              {s}
+        <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {STANDARDS.map(({ logo: Logo, name, note }) => (
+            <li
+              key={name}
+              className="group flex items-center gap-3 rounded-2xl border border-line bg-white px-3 py-3 transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-canvas ring-1 ring-black/5 transition group-hover:bg-white">
+                <Logo className="h-6 w-6" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-ink">{name}</span>
+                <span className="block truncate text-xs text-muted">{note}</span>
+              </span>
             </li>
           ))}
         </ul>
@@ -49,66 +49,12 @@ function Eyebrow({ children }: { children: ReactNode }) {
 
 function Heading({ children, id }: { children: ReactNode; id: string }) {
   return (
-    <h2 id={id} className="mt-3 text-3xl font-bold tracking-tight text-brand-950 sm:text-4xl">
+    <h2
+      id={id}
+      className="mt-3 text-2xl font-bold tracking-tight text-brand-950 sm:text-[2rem] sm:leading-tight"
+    >
       {children}
     </h2>
-  );
-}
-
-const STEPS = [
-  {
-    n: "01",
-    icon: IconFile,
-    title: "Create",
-    text: "Tulis klaim profesionalmu — prestasi, pengalaman, keahlian — lalu lampirkan bukti. File dienkripsi dan sidik jarinya (SHA-256) dicatat.",
-  },
-  {
-    n: "02",
-    icon: IconShield,
-    title: "Prove",
-    text: "Issuer yang terdaftar memeriksa bukti dan menerbitkan kredensial W3C. Hash-nya dicatat di BNB Smart Chain — tanpa data pribadi.",
-  },
-  {
-    n: "03",
-    icon: IconGlobe,
-    title: "Share",
-    text: "Bagikan profil, QR, atau CV PDF. Siapa pun bisa memverifikasi langsung dari blockchain, bahkan tanpa server Proven.",
-  },
-];
-
-export function Steps() {
-  return (
-    <section aria-labelledby="cara-kerja" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-      <div className="max-w-2xl">
-        <Eyebrow>Cara kerja</Eyebrow>
-        <Heading id="cara-kerja">
-          Dari klaim ke <em className="font-display text-[1.15em] font-normal text-brand-700">bukti</em>,
-          dalam tiga langkah.
-        </Heading>
-      </div>
-      <ol className="relative mt-12 grid gap-5 md:grid-cols-3">
-        {/* connector line */}
-        <div
-          aria-hidden
-          className="absolute left-0 right-0 top-12 hidden h-px bg-gradient-to-r from-transparent via-brand-200 to-transparent md:block"
-        />
-        {STEPS.map(({ n, icon: Icon, title, text }) => (
-          <li
-            key={title}
-            className="gradient-border group relative rounded-3xl p-6 transition duration-300 hover:-translate-y-1 hover:shadow-lift"
-          >
-            <div className="flex items-center justify-between">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 ring-1 ring-brand-100 transition group-hover:bg-brand-700 group-hover:text-white">
-                <Icon className="h-6 w-6" />
-              </span>
-              <span className="font-display text-4xl text-brand-200">{n}</span>
-            </div>
-            <h3 className="mt-6 text-xl font-semibold text-brand-950">{title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
-          </li>
-        ))}
-      </ol>
-    </section>
   );
 }
 
@@ -122,7 +68,7 @@ const CHECKS = [
 function Tile({ className = "", children }: { className?: string; children: ReactNode }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl border border-line bg-white p-6 transition duration-300 hover:shadow-lift sm:p-8 ${className}`}
+      className={`relative overflow-hidden rounded-3xl border border-line bg-white p-6 transition duration-300 hover:shadow-lift sm:p-7 ${className}`}
     >
       {children}
     </div>
@@ -131,10 +77,10 @@ function Tile({ className = "", children }: { className?: string; children: Reac
 
 export function Bento() {
   return (
-    <section aria-labelledby="keunggulan" className="bg-white py-20 sm:py-28">
+    <section aria-labelledby="keunggulan" className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="max-w-2xl">
-          <Eyebrow>Kenapa Proven</Eyebrow>
+          <Eyebrow>Kenapa Proven-ID</Eyebrow>
           <Heading id="keunggulan">
             Kepercayaan yang bisa{" "}
             <em className="font-display text-[1.15em] font-normal text-brand-700">dicek</em>, bukan sekadar
@@ -142,20 +88,20 @@ export function Bento() {
           </Heading>
         </div>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-6">
+        <div className="mt-10 grid gap-4 md:grid-cols-6">
           {/* Independent verification */}
-          <div className="relative overflow-hidden rounded-3xl bg-brand-950 p-6 text-white sm:p-8 md:col-span-4">
+          <div className="relative overflow-hidden rounded-3xl bg-brand-950 p-6 text-white sm:p-7 md:col-span-4">
             <div aria-hidden className="bg-grid absolute inset-0 opacity-60 mask-fade" />
             <div
               aria-hidden
-              className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/25 blur-3xl"
+              className="absolute -right-24 -top-24 h-72 w-72 bg-[radial-gradient(closest-side,rgb(16_185_129/0.3),transparent)]"
             />
             <div className="relative grid gap-8 sm:grid-cols-2 sm:items-center">
               <div>
                 <IconCheckBadge className="h-8 w-8 text-emerald-300" />
                 <h3 className="mt-4 text-2xl font-semibold">Verifikasi independen</h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/70">
-                  Browser pemeriksa membaca blockchain langsung — tanpa harus mempercayai server Proven.
+                  Browser pemeriksa membaca blockchain langsung — tanpa harus mempercayai server Proven-ID.
                 </p>
                 <Link
                   href="/verify"
@@ -229,10 +175,10 @@ export function Bento() {
               Profil publik, QR, dan CV PDF terverifikasi yang siap dikirim ke rekruter.
             </p>
             <Link
-              href="/p/rina-demo"
+              href={`/p/${site.showcaseSlug}`}
               className="mt-5 flex items-center justify-between gap-2 rounded-xl bg-canvas px-3 py-2.5 text-xs text-ink/80 transition hover:bg-brand-50"
             >
-              <span className="truncate font-mono">proven-id.vercel.app/p/rina-demo</span>
+              <span className="truncate font-mono">proven-id.vercel.app/p/{site.showcaseSlug}</span>
               <span aria-hidden className="text-brand-700">
                 ↗
               </span>
@@ -246,21 +192,21 @@ export function Bento() {
 
 export function CtaBand({ children }: { children: ReactNode }) {
   return (
-    <section aria-labelledby="cta" className="px-4 py-20 sm:px-6 sm:py-28">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-brand-950 px-6 py-16 text-center text-white sm:px-12">
+    <section aria-labelledby="cta" className="px-4 py-16 sm:px-6 sm:py-20">
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-brand-950 px-6 py-12 text-center text-white sm:px-12 sm:py-14">
         <div aria-hidden className="bg-grid absolute inset-0 mask-fade" />
         <div
           aria-hidden
-          className="absolute -bottom-32 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/30 blur-3xl"
+          className="absolute -bottom-40 left-1/2 h-80 w-[min(48rem,100%)] -translate-x-1/2 bg-[radial-gradient(closest-side,rgb(16_185_129/0.4),transparent)]"
         />
         <div className="relative">
-          <h2 id="cta" className="text-3xl font-bold tracking-tight sm:text-5xl">
+          <h2 id="cta" className="text-2xl font-bold tracking-tight sm:text-4xl">
             Berhenti mengklaim. <em className="font-display font-normal text-shine">Mulai membuktikan.</em>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-white/70">
             Gratis untuk dicoba. Tidak perlu wallet untuk menjelajahi mode demo.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">{children}</div>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">{children}</div>
         </div>
       </div>
     </section>
@@ -279,13 +225,13 @@ export function LandingFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-center md:justify-between">
         <div>
           <Logo />
-          <p className="mt-2 text-sm text-muted">Indonesia Web3 Hackathon Bali · BNB Smart Chain Testnet</p>
+          <p className="mt-2 text-sm text-muted">Indonesia Web3 Hackathon · BNB Smart Chain Testnet</p>
         </div>
         <nav
           aria-label="Tautan kaki"
           className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-ink/70"
         >
-          <Link href="/p/rina-demo" className="hover:text-brand-700">
+          <Link href={`/p/${site.showcaseSlug}`} className="hover:text-brand-700">
             Contoh profil
           </Link>
           <Link href="/verify" className="hover:text-brand-700">

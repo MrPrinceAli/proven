@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Verifikasi kredensial",
-  description: "Periksa keaslian dan status kredensial Proven langsung dari blockchain.",
+  description: "Periksa keaslian dan status kredensial Proven-ID langsung dari blockchain.",
 };
 
 const dateFormat = new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeZone: "UTC" });
@@ -39,7 +39,7 @@ export default async function VerifyCredentialPage({ params }: { params: { id: s
           <>
             <Seal state="not_found" />
             {status !== 404 && status !== 400 && (
-              <p className="text-sm text-muted">Server Proven sedang tidak tersedia. Coba lagi nanti.</p>
+              <p className="text-sm text-muted">Server Proven-ID sedang tidak tersedia. Coba lagi nanti.</p>
             )}
           </>
         ) : (

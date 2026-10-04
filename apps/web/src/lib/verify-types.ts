@@ -37,7 +37,7 @@ export const SEALS: Record<SealState, { label: string; description: string; clas
   },
   not_found: {
     label: "Tidak ditemukan",
-    description: "Kredensial ini tidak tercatat di blockchain Proven.",
+    description: "Kredensial ini tidak tercatat di blockchain Proven-ID.",
     className: "border-gray-400 bg-gray-50 text-gray-800",
   },
 };

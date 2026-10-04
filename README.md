@@ -4,7 +4,7 @@
 
 Proven mengubah klaim profesional (skill, pengalaman, proyek, prestasi, komunitas) menjadi kredensial yang bisa
 diverifikasi siapa saja: **CLAIM → EVIDENCE → VERIFICATION → CREDENTIAL + PROOF → PROVEN**.
-Dibangun untuk BNB Hackathon (Indonesia Web3 Hackathon Bali, track Consumer Apps).
+Dibangun untuk BNB Hackathon (Indonesia Web3 Hackathon, track Consumer Apps).
 
 - **Demo:** https://proven-id.vercel.app · verifikasi: `/verify` · profil contoh: `/p/rina-demo`
 - **Dokumen:** [rencana & spesifikasi](docs/PROVEN-WAVES.md) · [keputusan](docs/DECISIONS.md) · [progres](docs/PROGRESS.md) ·

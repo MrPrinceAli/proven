@@ -23,7 +23,7 @@ export function StatusLegend() {
         ))}
       </ol>
       <p className="mt-4 border-t border-line pt-3 text-xs text-muted">
-        Status <strong>Terverifikasi</strong> hanya bisa diberikan issuer. AI di Proven hanya membantu.
+        Status <strong>Terverifikasi</strong> hanya bisa diberikan issuer. AI di Proven-ID hanya membantu.
       </p>
     </Card>
   );
