@@ -9,12 +9,19 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src eval --ext .ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "ai:eval": "tsx eval/run-eval.ts"
   },
   "devDependencies": {
+    "@types/node": "22.20.5",
+    "tsx": "^4.20.0",
     "typescript": "5.4.5",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.131.0",
+    "zod": "3.25.76"
   }
 }

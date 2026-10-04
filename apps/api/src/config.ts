@@ -63,6 +63,19 @@ const EnvSchema = z.object({
   REGISTRY_ADDRESS: optionalAddress,
   ISSUER_REGISTRY_ADDRESS: optionalAddress,
   CREDENTIAL_SBT_ADDRESS: optionalAddress,
+  // AI (W6). "mock" needs no key and is used in dev, tests and CI.
+  LLM_PROVIDER: z.enum(["mock", "anthropic"]).default("mock"),
+  LLM_API_KEY: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? v : undefined)),
+  LLM_MODEL: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => v || "claude-opus-5-5"),
+  LLM_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
   // Vercel system environment variables (D-007). Absent outside Vercel.
   VERCEL_URL: z.string().optional(),
   VERCEL_BRANCH_URL: z.string().optional(),
@@ -86,6 +99,7 @@ export interface Config {
   registryAddress?: `0x${string}`;
   issuerRegistryAddress?: `0x${string}`;
   credentialSbtAddress?: `0x${string}`;
+  llm: { provider: "mock" | "anthropic"; apiKey?: string; model: string; timeoutMs: number };
   /** Hosts a SIWE message may name as its `domain` (D-007). */
   allowedDomains: string[];
   /** Origins a SIWE message may name as its `uri`. */
@@ -149,6 +163,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     registryAddress: e.REGISTRY_ADDRESS,
     issuerRegistryAddress: e.ISSUER_REGISTRY_ADDRESS,
     credentialSbtAddress: e.CREDENTIAL_SBT_ADDRESS,
+    llm: { provider: e.LLM_PROVIDER, apiKey: e.LLM_API_KEY, model: e.LLM_MODEL, timeoutMs: e.LLM_TIMEOUT_MS },
     allowedDomains,
     allowedOrigins,
   };

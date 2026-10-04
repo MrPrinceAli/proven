@@ -9,8 +9,9 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 | W2 Auth & Database | ✅ selesai — CI hijau, login jalan di preview | `w2-auth-database` · PR #3 |
 | W3 Profil & Evidence | ✅ selesai — CI hijau, alur jalan di preview | `w3-profile-evidence` · PR #4 |
 | W4 Mesin Kredensial | ✅ selesai — CI hijau | `w4-credential-engine` · PR #5 |
-| W5 Alur Issuer | ✅ selesai (demo testnet menunggu deploy kontrak) | `w5-issuer-flow` |
-| W6–W8 | ⏳ belum | — |
+| W5 Alur Issuer | ✅ selesai — CI hijau (demo testnet menunggu deploy kontrak) | `w5-issuer-flow` · PR #6 |
+| W6 AI Layer | ✅ selesai (AI asli opsional, butuh API key) | `w6-ai-layer` |
+| W7–W8 | ⏳ belum | — |
 
 ---
 
@@ -154,3 +155,27 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 **Tertunda**
 - Demo di BSC Testnet: deploy kontrak (langkah manual W1), lalu isi Vercel Env `ISSUER_ADDRESS`, `ISSUER_NAME`, `ISSUER_PRIVATE_KEY`, `REGISTRY_ADDRESS`, `ISSUER_REGISTRY_ADDRESS`, `CREDENTIAL_SBT_ADDRESS`, `NEXT_PUBLIC_REGISTRY_ADDRESS` (Production + Preview, jangan prefix `NEXT_PUBLIC_` untuk kunci).
 - Mint SBT (opsional) belum.
+
+---
+
+## W6 — AI Layer (2026-10-04)
+
+**Selesai — `packages/ai`**
+- `LlmClient.generateStructured` dengan provider `anthropic` (structured outputs, `claude-opus-5-5`, effort low, timeout 10 detik, retry 1×, refusal fallback — D-027) dan `mock` (deterministik).
+- Schema Zod: summary, cv, tailor, classify, claim-check. Prompt bervesi (`summary@1`, `cv@1`, `tailor@1`, `classify@1`, `claim-check@1`) dengan aturan: isi `<source>` adalah data, dilarang menambah fakta, wajib sitasi id.
+- Source pack ber-id stabil (`skill:<uuid>`, `evidence:<uuid>`, …), sanitasi karakter kontrol + escape markup, batas JD 8.000 karakter.
+- Guardrail deterministik (D-028): validasi schema, sitasi palsu dibuang, item CV tanpa sitasi dibuang, tailoring hanya skill terbukti + gaps dengan catatan persis, claim-check dihitung ulang aturan §S10.2, klasifikasi enum FR-05 + confidence 0..1.
+- 17 test: schema invalid → retry → gagal; sitasi palsu dibuang; dataset negatif (tanpa Rust + JD minta Rust → Rust hanya di gaps, tidak di CV/matched); model yang mengarang skill dikoreksi; claim-check tidak pernah VERIFIED tanpa kredensial; prompt injection di deskripsi bukti tidak mengubah hasil.
+- `pnpm ai:eval`: 15 kasus (`eval/dataset.json`), mengukur groundedness, hallucination, dan kebocoran skill setelah guardrail → `eval/report.md`. Dilewati bila `LLM_API_KEY` kosong (tidak jalan di CI).
+
+**Selesai — API** (rate limit 10/menit per sesi, semua respons `aiGenerated: true` + `promptVersion` + `model`)
+- `POST /ai/summary` (draf, tidak disimpan), `POST /ai/cv` (CV bersitasi, atau mode tailor bila ada `jobDescription`), `POST /ai/classify-evidence` (simpan `ai_type`/`ai_confidence` sebagai saran), `POST /ai/claim-check`, `GET /issuer/verification-requests/:id/claim-check` (saran untuk issuer).
+- 8 test API: perlu sesi, summary tidak tersimpan, tailoring tanpa skill palsu, klasifikasi hanya saran + authz, claim-check VERIFIED hanya dengan kredensial aktif (dicabut → tidak lagi), output invalid → 502, rate limit per user, saran issuer hanya untuk permintaannya. Total test API 111.
+
+**Selesai — UI**
+- `/dashboard/ai`: draf ringkasan (edit → "Simpan ke profil"), CV dengan chip sitasi, tailoring (tabel Cocok & terbukti + tabel Celah). Semua berlabel "AI-generated — periksa sebelum dipakai".
+- Evidence: tombol "Klasifikasikan (AI)" + saran dengan tombol "Terapkan". Profil: "Cek semua klaim" menampilkan badge cek AI per item. Issuer: "Minta saran AI" di panel permintaan.
+
+**Langkah manual (opsional)**
+- Untuk AI asli: Vercel Env `LLM_PROVIDER=anthropic`, `LLM_API_KEY` (Sensitive), opsional `LLM_MODEL` (default `claude-opus-5-5`). Tanpa itu, mode `mock` tetap berfungsi untuk demo alur.
+- Untuk metrik: `LLM_API_KEY=… pnpm ai:eval` lalu lihat `packages/ai/eval/report.md` (memanggil API berbayar).

@@ -16,7 +16,8 @@
     "test:contracts": "pnpm --filter @proven/contracts forge:test",
     "db:migrate": "pnpm --filter @proven/db migrate:deploy",
     "db:seed": "pnpm --filter @proven/db seed",
-    "contracts:deploy:local": "pnpm --filter @proven/contracts deploy:local"
+    "contracts:deploy:local": "pnpm --filter @proven/contracts deploy:local",
+    "ai:eval": "pnpm --filter @proven/ai ai:eval"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "7.18.0",
