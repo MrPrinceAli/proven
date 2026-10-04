@@ -115,4 +115,14 @@ describe.skipIf(!hasDatabase)("demo mode (D-032)", () => {
     });
     expect(allowed.statusCode).toBe(200);
   });
+
+  it("shows the demo issuer the newest sandbox first", async () => {
+    const older = (await demo({ role: "user" })).json();
+    const newer = (await demo({ role: "user" })).json();
+    const cookies = cookieOf(await demo({ role: "issuer" }));
+    const queue = (
+      await app.inject({ method: "GET", url: "/issuer/verification-requests?state=pending", cookies })
+    ).json();
+    expect(queue.map((q: { requester: { did: string } }) => q.requester.did)).toEqual([newer.did, older.did]);
+  });
 });
