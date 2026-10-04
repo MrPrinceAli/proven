@@ -6,8 +6,8 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 |---|---|---|
 | W0 Fondasi Monorepo | ✅ selesai — CI hijau, preview Vercel jalan | `w0-monorepo-foundation` · PR #1 |
 | W1 Smart Contracts | ✅ selesai — CI hijau (deploy testnet menunggu langkah manual) | `w1-smart-contracts` · PR #2 |
-| W2 Auth & Database | ✅ selesai — CI hijau (login di preview menunggu Neon) | `w2-auth-database` · PR #3 |
-| W3 Profil & Evidence | ✅ selesai (uji di preview menunggu Neon) | `w3-profile-evidence` |
+| W2 Auth & Database | ✅ selesai — CI hijau, login jalan di preview | `w2-auth-database` · PR #3 |
+| W3 Profil & Evidence | ✅ selesai — CI hijau, alur jalan di preview | `w3-profile-evidence` |
 | W4–W8 | ⏳ belum | — |
 
 ---
@@ -102,3 +102,10 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 
 **Langkah manual untuk user**
 - Setelah Neon tersambung: buka preview PR W3 → login MetaMask → isi profil + slug → tambah prestasi → unggah PDF → tautkan → buka `/p/<slug>` di jendela incognito (perlu Deployment Protection preview dimatikan, atau cek di production setelah merge).
+
+---
+
+## Neon tersambung (2026-10-04)
+- Resource `proven-neon` (Neon Free, region Singapura `sin1`), env Sensitive `DATABASE_URL` + `DATABASE_URL_UNPOOLED` untuk Preview + Production. Vercel Functions dipindah ke `sin1` (D-022).
+- Redeploy preview W3: `prisma migrate deploy` menerapkan `20261004000000_init` di Neon.
+- Diuji langsung di preview Vercel (`vercel curl`): `/api/health` ok; login SIWE → `/api/me` `did:ethr:97:…`; pesan SIWE yang sama ditolak saat diulang; buat prestasi → upload PDF (SHA-256 = `shasum`) → tautkan → `EVIDENCE_ATTACHED` → download identik.

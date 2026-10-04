@@ -109,3 +109,8 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** Kolom `evidence.type` wajib (NOT NULL) tetapi FR-05 mengklasifikasikannya dengan AI baru di W6; spesifikasi menulis "POST/DELETE /me/evidence/:id/links".
 **Keputusan:** `type` opsional saat upload dengan default `certificate`, bisa dikoreksi lewat `PATCH`/UI. Unlink memakai `DELETE /me/evidence/:id/links?entityType=…&entityId=…` (query, bukan body). Tambahan `GET /me/claims` (semua klaim + jumlah per status) untuk dashboard dan halaman profil. Rate limit SIWE bisa diatur lewat `buildApp({ rateLimit })` (test memakai limit tinggi; ada test 429).
 **Konsekuensi:** Tidak ada klasifikasi otomatis sebelum W6; UI meminta jenis bukti saat upload.
+
+## D-022 — Region Singapura untuk database dan server (2026-10-04)
+**Konteks:** Neon dibuat di Singapura (`sin1`), sedangkan Vercel Functions default di Washington (`iad1`); tiap query akan menyeberang benua.
+**Keputusan:** Project Vercel `serverlessFunctionRegion = sin1` (diatur lewat Vercel API). Neon: region `sin1`, env Sensitive untuk Preview + Production (tanpa Development, karena tidak ada runtime di laptop), branch DB per preview.
+**Konsekuensi:** Latensi API–DB rendah dan dekat dengan pengguna Indonesia.
