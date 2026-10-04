@@ -1,0 +1,76 @@
+name: ops
+
+# Operasi manual yang butuh rahasia (D-008). Dijalankan user lewat Actions → ops → Run workflow.
+# Rahasia hanya dibaca dari GitHub Secrets dan tidak pernah dicetak.
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: Operasi yang dijalankan
+        required: true
+        type: choice
+        options:
+          - deploy-contracts
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-contracts:
+    if: inputs.task == 'deploy-contracts'
+    name: Deploy kontrak ke BSC Testnet
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/contracts
+    env:
+      BSC_TESTNET_RPC_URL: ${{ secrets.BSC_TESTNET_RPC_URL || 'https://data-seed-prebsc-1-s1.bnbchain.org:8545' }}
+      ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+      DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+      ISSUER_ADDRESS: ${{ secrets.ISSUER_ADDRESS }}
+      ISSUER_NAME: ${{ secrets.ISSUER_NAME || 'XYZ Community' }}
+      ISSUER_DID: ${{ secrets.ISSUER_DID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+      - name: Cek secret wajib
+        run: |
+          missing=0
+          for name in DEPLOYER_PRIVATE_KEY ISSUER_ADDRESS ISSUER_DID; do
+            if [ -z "${!name}" ]; then echo "::error::Secret $name belum diisi"; missing=1; fi
+          done
+          exit $missing
+      - name: Pastikan RPC adalah BSC Testnet (97)
+        run: test "$(cast chain-id --rpc-url "$BSC_TESTNET_RPC_URL")" = "97"
+      - name: Deploy
+        run: forge script script/Deploy.s.sol:DeployProven --rpc-url bsc_testnet --broadcast
+      - name: Register issuer
+        run: |
+          ISSUER_REGISTRY_ADDRESS="$(jq -r .issuerRegistry deployments/97.json)"
+          export ISSUER_REGISTRY_ADDRESS
+          forge script script/RegisterIssuer.s.sol:RegisterIssuer --rpc-url bsc_testnet --broadcast
+      - name: Verifikasi kontrak di BscScan
+        if: env.ETHERSCAN_API_KEY != ''
+        continue-on-error: true
+        run: forge script script/Deploy.s.sol:DeployProven --rpc-url bsc_testnet --resume --verify
+      - name: Ringkasan
+        run: |
+          {
+            echo "## Kontrak Proven di BSC Testnet"
+            echo
+            echo "| Env | Address |"
+            echo "|---|---|"
+            echo "| ISSUER_REGISTRY_ADDRESS | [$(jq -r .issuerRegistry deployments/97.json)](https://testnet.bscscan.com/address/$(jq -r .issuerRegistry deployments/97.json)) |"
+            echo "| REGISTRY_ADDRESS + NEXT_PUBLIC_REGISTRY_ADDRESS | [$(jq -r .credentialRegistry deployments/97.json)](https://testnet.bscscan.com/address/$(jq -r .credentialRegistry deployments/97.json)) |"
+            echo "| CREDENTIAL_SBT_ADDRESS | [$(jq -r .credentialSBT deployments/97.json)](https://testnet.bscscan.com/address/$(jq -r .credentialSBT deployments/97.json)) |"
+            echo
+            echo "Salin address di atas ke Vercel → Settings → Environment Variables (Production + Preview)."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deployments-97
+          path: packages/contracts/deployments/97.json

@@ -47,3 +47,30 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  contracts:
+    name: Contracts (Foundry + Anvil)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+      - run: forge build --sizes
+      - run: forge test -vvv
+      - name: Coverage
+        run: forge coverage --report summary --no-match-coverage "(script|test)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Committed ABI matches compiled contracts
+        run: node scripts/export-abi.mjs && git diff --exit-code -- abi/
+      - name: Start Anvil
+        run: |
+          anvil --chain-id 31337 > anvil.log 2>&1 &
+          for i in $(seq 1 30); do cast chain-id --rpc-url http://127.0.0.1:8545 && exit 0; sleep 1; done
+          cat anvil.log; exit 1
+      - run: bash scripts/deploy-local.sh
+      - run: bash scripts/smoke-local.sh
