@@ -1,0 +1,26 @@
+{
+  "name": "@proven/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./abi/index.ts",
+  "types": "./abi/index.ts",
+  "exports": {
+    ".": "./abi/index.ts"
+  },
+  "scripts": {
+    "forge:build": "forge build",
+    "forge:test": "forge test -vvv",
+    "coverage": "forge coverage --report summary --no-match-coverage \"(script|test)\"",
+    "deploy:local": "bash scripts/deploy-local.sh",
+    "smoke:local": "bash scripts/smoke-local.sh",
+    "export-abi": "forge build && node scripts/export-abi.mjs",
+    "lint": "eslint abi test-ts --ext .ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "5.4.5",
+    "vitest": "^3.2.4"
+  }
+}

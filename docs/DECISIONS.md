@@ -69,3 +69,13 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** Stack mengunci Node 20, tetapi Node 20 EOL 30 April 2026 dan Vercel menonaktifkan Node 20 untuk deployment baru sejak 1 Oktober 2026.
 **Keputusan:** Node 22.x (`.nvmrc`, `engines.node`, CI, Vercel Project Settings). Versi stack lain tidak berubah.
 **Konsekuensi:** Next.js 14 kompatibel dengan Node 22. Disetujui implisit lewat permintaan user untuk deploy di Vercel; dicatat di sini dan di CLAUDE.md.
+
+## D-014 — Script Foundry diberi prefiks, ABI di-commit (2026-10-04, W1)
+**Konteks:** W1 meminta script `build` (forge build) dan `test` (forge test) di `packages/contracts`. Turborepo menjalankan `build`/`test` semua paket di job CI utama dan di Vercel, yang tidak punya Foundry.
+**Keputusan:** Script Foundry bernama `forge:build`, `forge:test`, `coverage`, `deploy:local`, `smoke:local`, `export-abi`; root `pnpm test:contracts` dan `pnpm contracts:deploy:local` memanggilnya. `test` paket ini = Vitest atas ABI TypeScript. File `abi/*.ts` hasil `export-abi` **di-commit** dan dicek CI (`git diff --exit-code abi/`), supaya `apps/*` bisa di-build tanpa Foundry.
+**Konsekuensi:** Foundry hanya dibutuhkan di job CI `contracts` dan workflow `ops.yml`. Setiap perubahan kontrak wajib menjalankan `pnpm --filter @proven/contracts export-abi`.
+
+## D-015 — Versi dependency kontrak (2026-10-04, W1)
+**Konteks:** Spesifikasi menyebut OpenZeppelin v5.x (contoh v5.1.0).
+**Keputusan:** OpenZeppelin `v5.7.0` (rilis v5 terbaru, kompatibel solc 0.8.24) dan forge-std `v1.17.0`, sebagai git submodule di `packages/contracts/lib` dan dikunci di `foundry.lock`. CI memakai Foundry `v1.7.1`.
+**Konsekuensi:** Patch keamanan v5 terbaru ikut terbawa tanpa mengubah API yang dipakai kontrak.
