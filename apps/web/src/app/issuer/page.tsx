@@ -14,7 +14,7 @@ import {
   Textarea,
   useToast,
 } from "@proven/ui";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AiLabel } from "@/components/AiLabel";
 import { CredentialCard } from "@/components/CredentialCard";
 import { ApiError } from "@/lib/api";
@@ -127,7 +127,7 @@ function Queue() {
         </ul>
       </Card>
       {selected ? (
-        <RequestPanel id={selected} onDone={() => setSelected(null)} />
+        <RequestPanel key={selected} id={selected} onDone={() => setSelected(null)} />
       ) : (
         <Card className="hidden p-6 lg:block">
           <EmptyState title="Pilih permintaan" description="Detail klaim dan bukti akan tampil di sini." />
@@ -145,8 +145,19 @@ function RequestPanel({ id, onDone }: { id: string; onDone: () => void }) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const top = useRef<HTMLDivElement>(null);
 
-  if (isLoading || !data) return <Card className="p-6 text-sm text-muted">Memuat detail…</Card>;
+  // Below lg the panel sits under the list: bring it into view when a request is picked.
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1023px)").matches) top.current?.scrollIntoView({ block: "start" });
+  }, []);
+
+  if (isLoading || !data)
+    return (
+      <div ref={top} className="scroll-mt-20">
+        <Card className="p-6 text-sm text-muted">Memuat detail…</Card>
+      </div>
+    );
   const pending = data.state === "pending";
   const fields = Object.entries(data.claim).filter(
     ([k, v]) => !["label", "status"].includes(k) && v !== null && v !== "",
@@ -181,143 +192,158 @@ function RequestPanel({ id, onDone }: { id: string; onDone: () => void }) {
   }
 
   return (
-    <Card className="flex flex-col gap-4 p-5">
-      <div>
-        <p className="text-xs uppercase tracking-wide text-muted">{KIND_BY_TYPE[data.entityType].title}</p>
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-semibold">{data.claim.label}</h2>
-          {data.claim.status && <StatusBadge status={data.claim.status} />}
-        </div>
-        <dl className="mt-2 grid gap-x-3 gap-y-1 text-sm sm:grid-cols-[auto,1fr]">
-          {fields.map(([k, v]) => (
-            <div key={k} className="contents">
-              <dt className="capitalize text-muted">{k}</dt>
-              <dd className="break-words">{String(v)}</dd>
-            </div>
-          ))}
-          <dt className="text-muted">Pemohon</dt>
-          <dd className="text-xs">
-            {data.requester.displayName && (
-              <span className="mb-0.5 block text-sm font-semibold text-ink">
-                {data.requester.displayName}
-              </span>
-            )}
-            <span className="font-mono">{data.requester.did}</span>
-            {data.requester.slug && (
-              <a
-                href={`/p/${data.requester.slug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="ml-2 font-sans text-brand-700 hover:underline"
-              >
-                profil publik ↗
-              </a>
-            )}
-          </dd>
-        </dl>
-      </div>
-
-      <section>
-        <h3 className="mb-2 text-sm font-semibold">Bukti ({data.evidence.length})</h3>
-        <ul className="flex flex-col gap-2">
-          {data.evidence.map((e) => (
-            <li key={e.id} className="rounded-md border border-line p-3">
-              <div className="flex items-center gap-2">
-                <IconFile className="h-4 w-4 text-brand-700" />
-                <span className="font-medium">{e.title || e.filename}</span>
-                <Badge>{e.type}</Badge>
-                <span className="text-xs text-muted">{formatBytes(e.sizeBytes)}</span>
-                <a
-                  href={`/api/issuer/verification-requests/${id}/evidence/${e.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="ml-auto text-sm font-medium text-brand-700 hover:underline"
-                >
-                  Lihat
-                </a>
-              </div>
-              <p className="mt-1 break-all font-mono text-xs text-muted">SHA-256 {e.sha256}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="rounded-md border border-dashed border-line p-3">
-        <h3 className="flex items-center gap-1 text-sm font-semibold">
-          <IconSparkles className="h-4 w-4 text-brand-700" /> Analisis AI
-        </h3>
-        <p className="mt-1 text-sm text-muted">AI hanya asisten. Keputusan ada di tangan issuer.</p>
-        {aiCheck.data ? (
-          <div className="mt-2 flex flex-col gap-2">
-            <AiLabel model={aiCheck.data.model} />
-            {aiCheck.data.result.claims.map((c) => (
-              <div key={c.claimId} className="text-sm">
-                <StatusBadge status={c.status} /> <span className="text-muted">{c.reason}</span>
-                <span className="ml-1 text-xs text-muted">· keyakinan {Math.round(c.confidence * 100)}%</span>
+    <div ref={top} className="scroll-mt-20">
+      <Card className="flex flex-col gap-4 p-5">
+        <button
+          type="button"
+          onClick={onDone}
+          className="-mb-2 self-start text-sm font-medium text-brand-700 hover:underline lg:hidden"
+        >
+          ← Kembali ke antrean
+        </button>
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted">{KIND_BY_TYPE[data.entityType].title}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold">{data.claim.label}</h2>
+            {data.claim.status && <StatusBadge status={data.claim.status} />}
+          </div>
+          <dl className="mt-2 grid gap-x-3 gap-y-1 text-sm sm:grid-cols-[auto,1fr]">
+            {fields.map(([k, v]) => (
+              <div key={k} className="contents">
+                <dt className="capitalize text-muted">{k}</dt>
+                <dd className="break-words">{String(v)}</dd>
               </div>
             ))}
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            className="mt-2 px-0"
-            onClick={() =>
-              aiCheck.mutateAsync(id).catch((e) => setError(e instanceof ApiError ? e.message : "Gagal"))
-            }
-            disabled={aiCheck.isPending}
-          >
-            {aiCheck.isPending ? "Menganalisis…" : "Minta saran AI"}
-          </Button>
-        )}
-      </section>
-
-      {error && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error}
-        </p>
-      )}
-      {pending ? (
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={approve} disabled={decide.isPending} aria-busy={decide.isPending}>
-            {decide.isPending ? "Mencatat ke blockchain…" : "Setujui & terbitkan"}
-          </Button>
-          <Button variant="danger" onClick={() => setRejecting(true)} disabled={decide.isPending}>
-            Tolak
-          </Button>
+            <dt className="text-muted">Pemohon</dt>
+            <dd className="text-xs">
+              {data.requester.displayName && (
+                <span className="mb-0.5 block text-sm font-semibold text-ink">
+                  {data.requester.displayName}
+                </span>
+              )}
+              <span className="font-mono">{data.requester.did}</span>
+              {data.requester.slug && (
+                <a
+                  href={`/p/${data.requester.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-2 font-sans text-brand-700 hover:underline"
+                >
+                  profil publik ↗
+                </a>
+              )}
+            </dd>
+          </dl>
         </div>
-      ) : (
-        <p className="text-sm text-muted">
-          Sudah {data.state === "approved" ? "disetujui" : "ditolak"}
-          {data.decidedAt && ` pada ${dateFormat.format(new Date(data.decidedAt))}`}
-          {data.reason && ` — ${data.reason}`}
-        </p>
-      )}
 
-      <Dialog
-        open={rejecting}
-        onClose={() => setRejecting(false)}
-        title="Tolak permintaan"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setRejecting(false)}>
-              Batal
+        <section>
+          <h3 className="mb-2 text-sm font-semibold">Bukti ({data.evidence.length})</h3>
+          <ul className="flex flex-col gap-2">
+            {data.evidence.map((e) => (
+              <li key={e.id} className="rounded-md border border-line p-3">
+                <div className="flex items-center gap-2">
+                  <IconFile className="h-4 w-4 text-brand-700" />
+                  <span className="font-medium">{e.title || e.filename}</span>
+                  <Badge>{e.type}</Badge>
+                  <span className="text-xs text-muted">{formatBytes(e.sizeBytes)}</span>
+                  <a
+                    href={`/api/issuer/verification-requests/${id}/evidence/${e.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-auto text-sm font-medium text-brand-700 hover:underline"
+                  >
+                    Lihat
+                  </a>
+                </div>
+                <p className="mt-1 break-all font-mono text-xs text-muted">SHA-256 {e.sha256}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="rounded-md border border-dashed border-line p-3">
+          <h3 className="flex items-center gap-1 text-sm font-semibold">
+            <IconSparkles className="h-4 w-4 text-brand-700" /> Analisis AI
+          </h3>
+          <p className="mt-1 text-sm text-muted">AI hanya asisten. Keputusan ada di tangan issuer.</p>
+          {aiCheck.data ? (
+            <div className="mt-2 flex flex-col gap-2">
+              <AiLabel model={aiCheck.data.model} />
+              {aiCheck.data.result.claims.map((c) => (
+                <div key={c.claimId} className="text-sm">
+                  <StatusBadge status={c.status} /> <span className="text-muted">{c.reason}</span>
+                  <span className="ml-1 text-xs text-muted">
+                    · keyakinan {Math.round(c.confidence * 100)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              className="mt-2 px-0"
+              onClick={() =>
+                aiCheck.mutateAsync(id).catch((e) => setError(e instanceof ApiError ? e.message : "Gagal"))
+              }
+              disabled={aiCheck.isPending}
+            >
+              {aiCheck.isPending ? "Menganalisis…" : "Minta saran AI"}
             </Button>
-            <Button variant="danger" onClick={reject} disabled={reason.trim().length < 3 || decide.isPending}>
+          )}
+        </section>
+
+        {error && (
+          <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
+            {error}
+          </p>
+        )}
+        {pending ? (
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={approve} disabled={decide.isPending} aria-busy={decide.isPending}>
+              {decide.isPending ? "Mencatat ke blockchain…" : "Setujui & terbitkan"}
+            </Button>
+            <Button variant="danger" onClick={() => setRejecting(true)} disabled={decide.isPending}>
               Tolak
             </Button>
-          </>
-        }
-      >
-        <Textarea
-          label="Alasan (dikirim ke pengguna)"
-          required
-          minLength={3}
-          maxLength={500}
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        />
-      </Dialog>
-    </Card>
+          </div>
+        ) : (
+          <p className="text-sm text-muted">
+            Sudah {data.state === "approved" ? "disetujui" : "ditolak"}
+            {data.decidedAt && ` pada ${dateFormat.format(new Date(data.decidedAt))}`}
+            {data.reason && ` — ${data.reason}`}
+          </p>
+        )}
+
+        <Dialog
+          open={rejecting}
+          onClose={() => setRejecting(false)}
+          title="Tolak permintaan"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setRejecting(false)}>
+                Batal
+              </Button>
+              <Button
+                variant="danger"
+                onClick={reject}
+                disabled={reason.trim().length < 3 || decide.isPending}
+              >
+                Tolak
+              </Button>
+            </>
+          }
+        >
+          <Textarea
+            label="Alasan (dikirim ke pengguna)"
+            required
+            minLength={3}
+            maxLength={500}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </Dialog>
+      </Card>
+    </div>
   );
 }
 

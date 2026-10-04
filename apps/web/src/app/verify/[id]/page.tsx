@@ -2,6 +2,7 @@ import { Card } from "@proven/ui";
 import type { Metadata } from "next";
 import { DownloadJsonButton } from "@/components/DownloadJsonButton";
 import { IndependentVerifier } from "@/components/IndependentVerifier";
+import { BackLink } from "@/components/BackLink";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Qr } from "@/components/Qr";
 import { Seal } from "@/components/Seal";
@@ -34,6 +35,7 @@ export default async function VerifyCredentialPage({ params }: { params: { id: s
     <div className="min-h-screen">
       <PublicHeader />
       <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-8">
+        <BackLink fallback="/verify" />
         <h1 className="text-2xl font-semibold">Verifikasi kredensial</h1>
         {!body ? (
           <>
