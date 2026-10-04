@@ -32,3 +32,41 @@ describe("loadConfig", () => {
     expect(config.allowedOrigins).toEqual(["http://localhost:3000"]);
   });
 });
+
+describe("issuer identity (D-025)", () => {
+  const anvil1 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+  const anvil1Key = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
+
+  it("derives the issuer DID from CHAIN_ID and the address", () => {
+    const config = testConfig({ ISSUER_ADDRESS: anvil1, ISSUER_NAME: "XYZ Community" });
+    expect(config.issuer).toEqual({
+      address: anvil1,
+      name: "XYZ Community",
+      did: "did:ethr:97:0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+    });
+  });
+
+  it("rejects an ISSUER_DID that does not match the address", () => {
+    expect(() =>
+      testConfig({
+        ISSUER_ADDRESS: anvil1,
+        ISSUER_NAME: "X",
+        ISSUER_DID: "did:ethr:97:0x0000000000000000000000000000000000000001",
+      }),
+    ).toThrow(/ISSUER_DID/);
+  });
+
+  it("rejects an ISSUER_PRIVATE_KEY that belongs to another address", () => {
+    expect(() =>
+      testConfig({
+        ISSUER_ADDRESS: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+        ISSUER_NAME: "X",
+        ISSUER_PRIVATE_KEY: anvil1Key,
+      }),
+    ).toThrow(/ISSUER_PRIVATE_KEY/);
+    expect(
+      testConfig({ ISSUER_ADDRESS: anvil1, ISSUER_NAME: "X", ISSUER_PRIVATE_KEY: anvil1Key })
+        .issuerPrivateKey,
+    ).toBe(anvil1Key);
+  });
+});

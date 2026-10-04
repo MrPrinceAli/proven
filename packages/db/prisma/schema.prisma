@@ -215,6 +215,9 @@ model VerificationRequest {
   draftVc           Json?     @map("draft_vc")
   draftCredentialId String?   @map("draft_credential_id") @db.Uuid
   draftStatusIndex  Int?      @map("draft_status_index")
+  // W5 additions (D-026): queue ordering and the reason shown to the user on rejection.
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  decisionReason    String?   @map("decision_reason")
 
   issuer    Issuer @relation(fields: [issuerId], references: [id])
   requester User   @relation(fields: [requestedBy], references: [id])

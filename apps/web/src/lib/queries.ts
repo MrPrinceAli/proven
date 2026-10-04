@@ -131,3 +131,158 @@ export function useLinkEvidence() {
     onSuccess: refresh,
   });
 }
+
+// ----- W5: verification requests & credentials -----
+
+export interface IssuerSummary {
+  id: string;
+  name: string;
+  did: string;
+  domain: string | null;
+}
+
+export interface CredentialView {
+  id: string;
+  credentialId: string;
+  status: "active" | "revoked" | "expired";
+  name: string | null;
+  issuer: { id: string; name: string; did: string };
+  issuedAt: string;
+  expiresAt: string | null;
+  vcHash: string;
+  revoked: boolean;
+  revokedAt: string | null;
+  revocationReason: string | null;
+  anchor: { txHash: string; block: number | null; contract: string; chainId: number } | null;
+  vc: unknown;
+}
+
+export interface MyRequest {
+  id: string;
+  entityType: EntityType;
+  entityId: string;
+  claim: { label: string; status: string | null };
+  issuer: { id: string; name: string };
+  state: "pending" | "approved" | "rejected";
+  reason: string | null;
+  createdAt: string;
+  decidedAt: string | null;
+  credentialId: string | null;
+}
+
+export interface QueueItem {
+  id: string;
+  evidenceCount?: number;
+  entityType: EntityType;
+  entityId: string;
+  claim: { label: string; status: string | null; [field: string]: unknown };
+  requester: { did: string | null; slug: string | null; headline: string };
+  state: "pending" | "approved" | "rejected";
+  createdAt: string;
+  decidedAt: string | null;
+}
+
+export interface RequestDetail extends Omit<QueueItem, "evidenceCount"> {
+  reason: string | null;
+  evidence: {
+    id: string;
+    type: string;
+    title: string | null;
+    filename: string | null;
+    mimeType: string | null;
+    sizeBytes: number | null;
+    sha256: string;
+    capturedAt: string;
+  }[];
+}
+
+export const myCredentialsKey = ["my-credentials"] as const;
+export const myRequestsKey = ["my-requests"] as const;
+export const issuerQueueKey = ["issuer-queue"] as const;
+export const issuerCredentialsKey = ["issuer-credentials"] as const;
+
+export function useIssuers() {
+  return useQuery({ queryKey: ["issuers"], queryFn: () => api<IssuerSummary[]>("/issuers") });
+}
+
+export function useMyCredentials() {
+  return useQuery({ queryKey: myCredentialsKey, queryFn: () => api<CredentialView[]>("/me/credentials") });
+}
+
+export function useMyRequests() {
+  return useQuery({ queryKey: myRequestsKey, queryFn: () => api<MyRequest[]>("/me/verification-requests") });
+}
+
+export function useRequestVerification() {
+  const qc = useQueryClient();
+  const refresh = useRefresh();
+  return useMutation({
+    mutationFn: (body: {
+      entityType: EntityType;
+      entityId: string;
+      issuerId: string;
+      evidenceIds: string[];
+    }) => api<{ id: string }>("/me/verification-requests", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => Promise.all([refresh(), qc.invalidateQueries({ queryKey: myRequestsKey })]),
+  });
+}
+
+export function useIssuerQueue(state: "pending" | "approved" | "rejected" | "all") {
+  return useQuery({
+    queryKey: [...issuerQueueKey, state],
+    queryFn: () =>
+      api<QueueItem[]>(`/issuer/verification-requests${state === "all" ? "" : `?state=${state}`}`),
+  });
+}
+
+export function useIssuerRequest(id: string | null) {
+  return useQuery({
+    queryKey: ["issuer-request", id],
+    queryFn: () => api<RequestDetail>(`/issuer/verification-requests/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+function useIssuerRefresh() {
+  const qc = useQueryClient();
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: issuerQueueKey }),
+      qc.invalidateQueries({ queryKey: ["issuer-request"] }),
+      qc.invalidateQueries({ queryKey: issuerCredentialsKey }),
+    ]);
+}
+
+export function useDecideRequest() {
+  const refresh = useIssuerRefresh();
+  return useMutation({
+    mutationFn: ({ id, decision, reason }: { id: string; decision: "approve" | "reject"; reason?: string }) =>
+      api<{ credentialId?: string; txHash?: string | null }>(
+        `/issuer/verification-requests/${id}/${decision}`,
+        {
+          method: "POST",
+          ...(decision === "reject" ? { body: JSON.stringify({ reason }) } : {}),
+        },
+      ),
+    onSuccess: refresh,
+  });
+}
+
+export function useIssuerCredentials() {
+  return useQuery({
+    queryKey: issuerCredentialsKey,
+    queryFn: () => api<CredentialView[]>("/issuer/credentials"),
+  });
+}
+
+export function useRevokeCredential() {
+  const refresh = useIssuerRefresh();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      api<{ txHash: string | null }>(`/issuer/credentials/${id}/revoke`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      }),
+    onSuccess: refresh,
+  });
+}

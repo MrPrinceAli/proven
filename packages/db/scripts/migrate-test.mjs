@@ -11,7 +11,7 @@ if (!url) {
   process.exit(0);
 }
 
-execFileSync("prisma", ["migrate", "deploy"], {
+execFileSync("pnpm", ["exec", "prisma", "migrate", "deploy"], {
   stdio: "inherit",
   env: { ...process.env, DATABASE_URL: url, DATABASE_URL_UNPOOLED: url },
 });

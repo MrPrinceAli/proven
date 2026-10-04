@@ -8,8 +8,9 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 | W1 Smart Contracts | ✅ selesai — CI hijau (deploy testnet menunggu langkah manual) | `w1-smart-contracts` · PR #2 |
 | W2 Auth & Database | ✅ selesai — CI hijau, login jalan di preview | `w2-auth-database` · PR #3 |
 | W3 Profil & Evidence | ✅ selesai — CI hijau, alur jalan di preview | `w3-profile-evidence` · PR #4 |
-| W4 Mesin Kredensial | ✅ selesai | `w4-credential-engine` |
-| W5–W8 | ⏳ belum | — |
+| W4 Mesin Kredensial | ✅ selesai — CI hijau | `w4-credential-engine` · PR #5 |
+| W5 Alur Issuer | ✅ selesai (demo testnet menunggu deploy kontrak) | `w5-issuer-flow` |
+| W6–W8 | ⏳ belum | — |
 
 ---
 
@@ -130,3 +131,26 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 
 **Tertunda**
 - Anchor nyata di BSC Testnet menunggu deploy kontrak (langkah manual W1) dan env `REGISTRY_ADDRESS`, `ISSUER_REGISTRY_ADDRESS`, `ISSUER_PRIVATE_KEY` di Vercel.
+
+---
+
+## W5 — Alur Issuer (2026-10-04)
+
+**Selesai — API**
+- Issuer: bootstrap dari env (D-025), `pnpm issuer:register` (DB + `IssuerRegistry.register` bila belum aktif, idempotent) + task `issuer-register` di `ops.yml`, `GET /issuers` publik.
+- User: `POST /me/verification-requests` (klaim & bukti milik sendiri, bukti ≥ 1 → 422 `evidence-required` persis §S9.4, issuer terverifikasi, tanpa duplikat pending → 409, status → `PENDING_ISSUER`, audit), `GET /me/verification-requests`, `GET /me/credentials`.
+- Issuer (wajib issuer DB + on-chain, hanya data issuer sendiri → 404): antrean dengan filter state, detail + daftar bukti, unduh bukti terdekripsi (hanya bukti di permintaan itu), approve, reject (alasan), daftar kredensial, revoke (alasan).
+- Approve sesuai §W5 6 + D-010: kunci baris → draft VC sekali → anchor (idempotent) → bukti EIP-712 → satu transaksi DB (`credentials`, `credential_status`, `chain_anchors`, request `approved`, klaim `VERIFIED`, audit). Anchor gagal → tetap `pending` dengan draft; approve ulang meng-anchor hash yang sama tepat sekali.
+- Revoke: on-chain dulu lalu DB (`credentials.status`, `credential_status.revoked/revoked_at/reason`, klaim `REVOKED`, audit).
+- Migrasi `created_at` + `decision_reason` (D-026).
+- 11 test alur issuer terhadap Anvil + Postgres: loop lengkap (request → antrean → unduh bukti → approve → DB, `getAnchor`, `verifyVC` valid → revoke → `isRevoked` & DB revoked → `verifyVC` revoked), non-issuer 403, issuer lain 404, approve dua kali 409, tanpa bukti 422, duplikat 409, reject, bukti di luar permintaan 404, anchor gagal → retry satu anchor, tanpa chain → fail-closed. Total test API 103.
+- Diverifikasi lewat `next start` + Anvil: request → issuer approve (tx + blok) → user melihat kredensial `active` & klaim `VERIFIED` → revoke → `revoked`/`REVOKED`.
+
+**Selesai — UI**
+- Tombol "Minta verifikasi" di klaim berstatus *Ada bukti* → dialog pilih issuer + centang bukti.
+- `/dashboard/credentials`: kartu kredensial (status, issuer, tanggal, hash VC, anchor + link explorer, link halaman verifikasi) + riwayat permintaan dengan alasan penolakan.
+- `/issuer`: tab Antrean (filter, daftar, panel detail dengan bukti + SHA-256, slot "Analisis AI", Setujui/Tolak dengan konfirmasi dan status "Mencatat ke blockchain…") dan tab Kredensial (Cabut dengan alasan).
+
+**Tertunda**
+- Demo di BSC Testnet: deploy kontrak (langkah manual W1), lalu isi Vercel Env `ISSUER_ADDRESS`, `ISSUER_NAME`, `ISSUER_PRIVATE_KEY`, `REGISTRY_ADDRESS`, `ISSUER_REGISTRY_ADDRESS`, `CREDENTIAL_SBT_ADDRESS`, `NEXT_PUBLIC_REGISTRY_ADDRESS` (Production + Preview, jangan prefix `NEXT_PUBLIC_` untuk kunci).
+- Mint SBT (opsional) belum.

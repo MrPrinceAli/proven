@@ -10,9 +10,10 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "lint": "eslint src test --ext .ts",
+    "lint": "eslint src test scripts --ext .ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "issuer:register": "tsx scripts/register-issuer.ts"
   },
   "dependencies": {
     "@fastify/cookie": "9.4.0",

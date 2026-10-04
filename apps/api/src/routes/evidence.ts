@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply } from "fastify";
 import { EntityType, EvidenceType, type Evidence, type EvidenceLink, type Prisma } from "@proven/db";
 import { z } from "zod";
 import { audit } from "../audit";
@@ -63,6 +63,34 @@ export function serializeEvidence(e: Evidence & { links: EvidenceLink[] }) {
     links: e.links.map((l) => ({ entityType: l.entityType, entityId: l.entityId })),
     custody: m.custody,
   };
+}
+
+/** Decrypts stored evidence and re-checks its SHA-256; 409 integrity-mismatch on any discrepancy. */
+export async function readEvidence(app: FastifyInstance, evidence: Evidence) {
+  const m = meta(evidence);
+  const ciphertext = await store.get(app.prisma, evidence.storageKey);
+  if (!ciphertext) throw problem(409, "integrity-mismatch", "Stored file is missing");
+  let plaintext: Buffer;
+  try {
+    plaintext = decrypt(app.config.evidenceKey, { ciphertext, iv: m.iv, tag: m.tag });
+  } catch {
+    throw problem(409, "integrity-mismatch", "Stored file failed authentication");
+  }
+  const digest = sha256(plaintext);
+  if (!digest.equals(Buffer.from(evidence.sha256))) {
+    throw problem(409, "integrity-mismatch", "SHA-256 of the stored file does not match the recorded hash");
+  }
+  return { plaintext, digest };
+}
+
+export function sendEvidence(reply: FastifyReply, evidence: Evidence, plaintext: Buffer, digest: Buffer) {
+  const ext = EXTENSION[evidence.mimeType as EvidenceMime] ?? "bin";
+  return reply
+    .header("content-type", evidence.mimeType ?? "application/octet-stream")
+    .header("content-disposition", `attachment; filename="evidence-${evidence.id.slice(0, 8)}.${ext}"`)
+    .header("cache-control", "private, no-store")
+    .header("x-content-sha256", digest.toString("hex"))
+    .send(plaintext);
 }
 
 export async function evidenceRoutes(app: FastifyInstance) {
@@ -149,20 +177,7 @@ export async function evidenceRoutes(app: FastifyInstance) {
     const userId = request.auth!.userId;
     const { id } = IdParam.parse(request.params);
     const evidence = await own(id, userId);
-    const m = meta(evidence);
-
-    const ciphertext = await store.get(prisma, evidence.storageKey);
-    if (!ciphertext) throw problem(409, "integrity-mismatch", "Stored file is missing");
-    let plaintext: Buffer;
-    try {
-      plaintext = decrypt(config.evidenceKey, { ciphertext, iv: m.iv, tag: m.tag });
-    } catch {
-      throw problem(409, "integrity-mismatch", "Stored file failed authentication");
-    }
-    const digest = sha256(plaintext);
-    if (!digest.equals(Buffer.from(evidence.sha256))) {
-      throw problem(409, "integrity-mismatch", "SHA-256 of the stored file does not match the recorded hash");
-    }
+    const { plaintext, digest } = await readEvidence(app, evidence);
 
     await audit(prisma, {
       actorType: "user",
@@ -172,13 +187,7 @@ export async function evidenceRoutes(app: FastifyInstance) {
       entityId: id,
       ip: request.ip,
     });
-    const ext = EXTENSION[evidence.mimeType as EvidenceMime] ?? "bin";
-    return reply
-      .header("content-type", evidence.mimeType ?? "application/octet-stream")
-      .header("content-disposition", `attachment; filename="evidence-${id.slice(0, 8)}.${ext}"`)
-      .header("cache-control", "private, no-store")
-      .header("x-content-sha256", digest.toString("hex"))
-      .send(plaintext);
+    return sendEvidence(reply, evidence, plaintext, digest);
   });
 
   app.patch("/me/evidence/:id", { preHandler: requireUser }, async (request) => {
@@ -218,6 +227,10 @@ export async function evidenceRoutes(app: FastifyInstance) {
     const userId = request.auth!.userId;
     const { id } = IdParam.parse(request.params);
     const evidence = await own(id, userId);
+    const pending = await prisma.verificationRequest.count({
+      where: { state: "pending", evidenceIds: { has: id } },
+    });
+    if (pending > 0) throw problem(409, "conflict", "Bukti sedang dipakai dalam permintaan verifikasi");
 
     await prisma.$transaction(async (tx) => {
       await tx.evidence.delete({ where: { id } }); // evidence_links cascade
