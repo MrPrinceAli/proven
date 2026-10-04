@@ -1,5 +1,12 @@
 {
   "name": "proven",
+  "description": "Proven-ID — verified professional identity: W3C Verifiable Credentials anchored on BNB Smart Chain.",
+  "license": "MIT",
+  "homepage": "https://proven-id.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MrPrinceAli/proven.git"
+  },
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "engines": {
