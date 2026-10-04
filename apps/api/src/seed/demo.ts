@@ -13,6 +13,10 @@ export interface SeedInput {
   issuer: IssuerIdentity;
   /** Wallet the presenter logs in with during the demo (EIP-55). */
   demoAddress: string;
+  /** Public slug; defaults to "rina-demo" (skipped when taken). */
+  slug?: string;
+  /** "demo" marks wallet-less sandbox users created by demo mode (D-032). */
+  authProvider?: "wallet" | "demo";
 }
 
 const DEMO_SLUG = "rina-demo";
@@ -48,19 +52,27 @@ export async function certificatePdf(issuerName: string): Promise<Buffer> {
  * `pnpm db:seed` (§W8 2): issuer "XYZ Community", a demo user with a full profile, a certificate,
  * one skill deliberately without evidence, and one PENDING request for a live approve. Idempotent.
  */
-export async function seedDemo({ prisma, chainId, evidenceKey, issuer, demoAddress }: SeedInput) {
+export async function seedDemo({
+  prisma,
+  chainId,
+  evidenceKey,
+  issuer,
+  demoAddress,
+  slug = DEMO_SLUG,
+  authProvider = "wallet",
+}: SeedInput) {
   const issuerRow = await bootstrapIssuer(prisma, issuer);
   const did = `did:ethr:${chainId}:${demoAddress.toLowerCase()}`;
 
   const userId = await prisma.$transaction(async (tx) => {
     const wallet = await tx.wallet.findUnique({ where: { did } });
     if (wallet) return wallet.userId;
-    const user = await tx.user.create({ data: { profile: { create: {} } } });
+    const user = await tx.user.create({ data: { authProvider, profile: { create: {} } } });
     await tx.wallet.create({ data: { userId: user.id, address: demoAddress, chainId, did } });
     return user.id;
   });
 
-  const slugTaken = await prisma.profile.findFirst({ where: { slug: DEMO_SLUG, NOT: { userId } } });
+  const slugTaken = await prisma.profile.findFirst({ where: { slug, NOT: { userId } } });
   await prisma.profile.update({
     where: { userId },
     data: {
@@ -68,7 +80,7 @@ export async function seedDemo({ prisma, chainId, evidenceKey, issuer, demoAddre
       summary:
         "Membangun dApp dan tooling Web3 di Indonesia. Fokus pada Solidity, keamanan kontrak, dan identitas profesional yang bisa diverifikasi.",
       visibility: "public",
-      ...(slugTaken ? {} : { slug: DEMO_SLUG }),
+      ...(slugTaken ? {} : { slug }),
     },
   });
 
@@ -193,7 +205,7 @@ export async function seedDemo({ prisma, chainId, evidenceKey, issuer, demoAddre
     userId,
     did,
     issuerId: issuerRow.id,
-    slug: slugTaken ? null : DEMO_SLUG,
+    slug: slugTaken ? null : slug,
     evidenceSha256: Buffer.from(evidence.sha256).toString("hex"),
   };
 }

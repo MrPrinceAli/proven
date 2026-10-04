@@ -15,6 +15,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useLogout, useSession } from "@/lib/session";
+import { DemoBanner } from "./DemoBanner";
 import { avatarLabel } from "./identity";
 import { ProfileMiniCard } from "./ProfileMiniCard";
 import { StatusLegend } from "./StatusLegend";
@@ -100,6 +101,7 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
           </div>
         </div>
       </header>
+      <DemoBanner />
 
       <div
         className={`mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-6 px-4 py-6 ${

@@ -34,6 +34,7 @@ export const e2eEnv: Record<string, string> = {
   ISSUER_REGISTRY_ADDRESS: deployments.issuerRegistry,
   CREDENTIAL_SBT_ADDRESS: deployments.credentialSBT,
   LLM_PROVIDER: "mock",
+  DEMO_MODE: "1",
   // Build-time (client) values.
   NEXT_PUBLIC_CHAIN_ID: "31337",
   NEXT_PUBLIC_RPC_URL: "http://127.0.0.1:8545",

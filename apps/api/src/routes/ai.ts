@@ -15,6 +15,7 @@ import { audit } from "../audit";
 import { requireIssuer, requireUser } from "../auth/guards";
 import { SESSION_COOKIE } from "../auth/session";
 import { problem } from "../problem";
+import { assertDemoScope } from "./demo";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -126,6 +127,7 @@ export async function aiRoutes(app: FastifyInstance) {
       const row =
         issuer && (await prisma.verificationRequest.findFirst({ where: { id, issuerId: issuer.id } }));
       if (!row) throw problem(404, "not-found", "Verification request not found");
+      await assertDemoScope(request, row.requestedBy);
       const facts = await buildClaimFacts(prisma, row.requestedBy, {
         entityType: row.entityType,
         entityId: row.entityId,

@@ -2,6 +2,7 @@
 
 import { Card, IconAward, IconFile, IconGlobe, IconShield, IconSparkles, buttonClasses } from "@proven/ui";
 import Link from "next/link";
+import { DemoEntry } from "@/components/DemoEntry";
 import { LoginButton } from "@/components/LoginButton";
 import { useSession } from "@/lib/session";
 import { site } from "@/lib/site";
@@ -36,9 +37,14 @@ export default function HomePage() {
           </span>
           <span className="text-lg font-bold text-brand-800">{site.name}</span>
         </span>
-        <Link href="/verify" className="text-sm font-medium text-brand-700 hover:underline">
-          Verifikasi kredensial
-        </Link>
+        <nav className="flex items-center gap-4 text-sm font-medium text-brand-700">
+          <Link href="/p/rina-demo" className="hover:underline">
+            Contoh profil
+          </Link>
+          <Link href="/verify" className="hover:underline">
+            Verifikasi kredensial
+          </Link>
+        </nav>
       </header>
 
       <main>
@@ -55,6 +61,7 @@ export default function HomePage() {
           ) : (
             <LoginButton />
           )}
+          {!me && <DemoEntry />}
           <p className="text-xs text-muted">
             Masuk dengan tanda tangan wallet (Sign-In with Ethereum) di BNB Smart Chain Testnet — gratis,
             tanpa transaksi.

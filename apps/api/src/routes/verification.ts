@@ -13,6 +13,7 @@ import { requireIssuer, requireUser } from "../auth/guards";
 import { CLAIM_KINDS } from "../claims";
 import { approveRequest, credentialUrn, rejectRequest, revokeCredential } from "../credentials/service";
 import { problem } from "../problem";
+import { assertDemoScope } from "./demo";
 import { readEvidence, sendEvidence } from "./evidence";
 
 const IdParam = z.object({ id: z.string().uuid() });
@@ -199,7 +200,12 @@ export async function verificationRoutes(app: FastifyInstance) {
     const issuer = await currentIssuer(request);
     const { state } = StateQuery.parse(request.query);
     const rows = await prisma.verificationRequest.findMany({
-      where: { issuerId: issuer.id, ...(state ? { state } : {}) },
+      where: {
+        issuerId: issuer.id,
+        ...(state ? { state } : {}),
+        // Demo issuers only see demo sandboxes (D-032).
+        ...(request.auth!.via === "demo" ? { requester: { authProvider: "demo" } } : {}),
+      },
       include: { requester: { include: { wallets: true, profile: true } } },
       orderBy: { createdAt: "asc" },
     });
@@ -229,6 +235,7 @@ export async function verificationRoutes(app: FastifyInstance) {
       include: { requester: { include: { wallets: true, profile: true } } },
     });
     if (!row) throw problem(404, "not-found", "Verification request not found");
+    await assertDemoScope(request, row.requestedBy);
     return { issuer, row };
   };
 
@@ -292,14 +299,14 @@ export async function verificationRoutes(app: FastifyInstance) {
 
   app.post("/issuer/verification-requests/:id/approve", { preHandler: requireIssuer }, async (request) => {
     const { id } = IdParam.parse(request.params);
-    const issuer = await currentIssuer(request);
+    const { issuer } = await ownRequest(request, id);
     return approveRequest(app, issuer, id, request.ip);
   });
 
   app.post("/issuer/verification-requests/:id/reject", { preHandler: requireIssuer }, async (request) => {
     const { id } = IdParam.parse(request.params);
     const { reason } = Reason.parse(request.body);
-    const issuer = await currentIssuer(request);
+    const { issuer } = await ownRequest(request, id);
     await rejectRequest(app, issuer, id, reason, request.ip);
     return { id, state: "rejected", reason };
   });
@@ -307,7 +314,10 @@ export async function verificationRoutes(app: FastifyInstance) {
   app.get("/issuer/credentials", { preHandler: requireIssuer }, async (request) => {
     const issuer = await currentIssuer(request);
     const rows = await prisma.credential.findMany({
-      where: { issuerId: issuer.id },
+      where: {
+        issuerId: issuer.id,
+        ...(request.auth!.via === "demo" ? { subject: { authProvider: "demo" } } : {}),
+      },
       include: credentialInclude,
       orderBy: { issuedAt: "desc" },
     });
@@ -318,6 +328,8 @@ export async function verificationRoutes(app: FastifyInstance) {
     const { id } = IdParam.parse(request.params);
     const { reason } = Reason.parse(request.body);
     const issuer = await currentIssuer(request);
+    const credential = await prisma.credential.findFirst({ where: { id, issuerId: issuer.id } });
+    if (credential) await assertDemoScope(request, credential.subjectUserId);
     return revokeCredential(app, issuer, id, reason, request.ip);
   });
 }

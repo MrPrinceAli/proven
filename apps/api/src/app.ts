@@ -13,6 +13,7 @@ import { problem, registerProblemHandlers } from "./problem";
 import { adminRoutes } from "./routes/admin";
 import { aiRoutes } from "./routes/ai";
 import { authRoutes } from "./routes/auth";
+import { demoRoutes } from "./routes/demo";
 import { claimRoutes } from "./routes/claims";
 import { evidenceRoutes, MAX_EVIDENCE_BYTES } from "./routes/evidence";
 import { meRoutes } from "./routes/me";
@@ -93,6 +94,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(aiRoutes);
   await app.register(verifyRoutes);
   await app.register(adminRoutes);
+  await app.register(demoRoutes);
 
   return app;
 }
