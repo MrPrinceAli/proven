@@ -28,11 +28,18 @@ export interface VerifyResult {
   expired: boolean;
   /** False when the chain could not be read and the DB value was used. */
   chainChecked: boolean;
+  /** Issued to a demo-mode sandbox: example content, not a real achievement (D-035). */
+  sandbox: boolean;
   checkedAt: string;
   vc: unknown;
 }
 
-const include = { issuer: true, statusEntry: true, chainAnchors: true } satisfies Prisma.CredentialInclude;
+const include = {
+  issuer: true,
+  statusEntry: true,
+  chainAnchors: true,
+  subject: { select: { authProvider: true } },
+} satisfies Prisma.CredentialInclude;
 
 export async function verifyRoutes(app: FastifyInstance) {
   const { prisma } = app;
@@ -87,6 +94,7 @@ export async function verifyRoutes(app: FastifyInstance) {
       revoked,
       expired,
       chainChecked,
+      sandbox: credential.subject.authProvider === "demo",
       checkedAt: new Date().toISOString(),
       vc: credential.vcJson,
     };
@@ -106,7 +114,8 @@ export async function verifyRoutes(app: FastifyInstance) {
       const request = await tx.verificationRequest.findFirst({ where: { draftCredentialId: id } });
       if (request) {
         const kind = CLAIM_KINDS[EntityType.parse(request.entityType)];
-        await kind.delegate(tx).update({
+        // updateMany: never let a deleted claim block syncing the on-chain status.
+        await kind.delegate(tx).updateMany({
           where: { id: request.entityId },
           data: { status: revoked ? "REVOKED" : "VERIFIED" },
         });
@@ -231,7 +240,7 @@ export async function verifyRoutes(app: FastifyInstance) {
 export async function publicCredentials(app: FastifyInstance, userId: string) {
   const rows = await app.prisma.credential.findMany({
     where: { subjectUserId: userId },
-    include: { issuer: true },
+    include: { issuer: true, subject: { select: { authProvider: true } } },
     orderBy: { issuedAt: "desc" },
   });
   return rows.map((c) => {
@@ -244,6 +253,7 @@ export async function publicCredentials(app: FastifyInstance, userId: string) {
       status: c.status,
       issuedAt: c.issuedAt.toISOString(),
       expiresAt: c.expiresAt?.toISOString() ?? null,
+      sandbox: c.subject.authProvider === "demo",
     };
   });
 }

@@ -15,7 +15,7 @@ export async function meRoutes(app: FastifyInstance) {
     const wallet = user.wallets.find((w) => w.address === address) ?? user.wallets[0];
     const roles = ["user"];
     if (await isIssuer(request, address)) roles.push("issuer");
-    if (isAdmin(request, address)) roles.push("admin");
+    if (request.auth!.via !== "demo" && isAdmin(request, address)) roles.push("admin");
 
     return {
       user: { id: user.id, status: user.status, createdAt: user.createdAt.toISOString() },

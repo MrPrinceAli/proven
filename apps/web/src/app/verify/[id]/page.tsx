@@ -47,6 +47,16 @@ export default async function VerifyCredentialPage({ params }: { params: { id: s
         ) : (
           <>
             <Seal state={body.status} />
+            {body.sandbox && (
+              <p
+                role="note"
+                className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              >
+                <strong>Kredensial demo.</strong> Diterbitkan di mode demo Proven-ID untuk uji coba: isinya
+                contoh, bukan prestasi yang diverifikasi sungguhan. Tanda tangan dan catatan on-chain-nya
+                tetap asli.
+              </p>
+            )}
             <Card className="p-5">
               <h2 className="text-lg font-semibold">
                 {vc?.credentialSubject?.achievement?.name ?? "Kredensial"}

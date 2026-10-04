@@ -227,10 +227,17 @@ export async function evidenceRoutes(app: FastifyInstance) {
     const userId = request.auth!.userId;
     const { id } = IdParam.parse(request.params);
     const evidence = await own(id, userId);
-    const pending = await prisma.verificationRequest.count({
-      where: { state: "pending", evidenceIds: { has: id } },
+    // Evidence behind a pending or approved request is frozen: it is what the issuer reviewed (D-035).
+    const inUse = await prisma.verificationRequest.count({
+      where: { state: { in: ["pending", "approved"] }, evidenceIds: { has: id } },
     });
-    if (pending > 0) throw problem(409, "conflict", "Bukti sedang dipakai dalam permintaan verifikasi");
+    if (inUse > 0) {
+      throw problem(
+        409,
+        "conflict",
+        "Bukti sedang atau sudah dipakai dalam verifikasi dan tidak bisa dihapus",
+      );
+    }
 
     await prisma.$transaction(async (tx) => {
       await tx.evidence.delete({ where: { id } }); // evidence_links cascade
@@ -287,6 +294,21 @@ export async function evidenceRoutes(app: FastifyInstance) {
     const target = LinkTarget.parse(request.query);
     await own(id, userId);
     const kind = CLAIM_KINDS[target.entityType];
+    const inUse = await prisma.verificationRequest.count({
+      where: {
+        entityType: target.entityType,
+        entityId: target.entityId,
+        state: { in: ["pending", "approved"] },
+        evidenceIds: { has: id },
+      },
+    });
+    if (inUse > 0) {
+      throw problem(
+        409,
+        "conflict",
+        "Bukti ini dipakai dalam verifikasi klaim tersebut dan tidak bisa dilepas",
+      );
+    }
 
     const status = await prisma.$transaction(async (tx) => {
       const removed = await tx.evidenceLink.deleteMany({ where: { evidenceId: id, ...target } });

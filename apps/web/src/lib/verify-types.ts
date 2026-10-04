@@ -8,6 +8,8 @@ export interface VerifyResult {
   revoked: boolean;
   expired: boolean;
   chainChecked: boolean;
+  /** Issued to a demo-mode sandbox (D-035): example content, not a real achievement. */
+  sandbox?: boolean;
   checkedAt: string;
   vc: unknown;
 }

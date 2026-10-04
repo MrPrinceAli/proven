@@ -40,7 +40,10 @@ export function AccountMenu({ me }: { me: Me }) {
   if (!me.wallet) return null;
   const profile = me.profile;
   const name = displayName(profile?.displayName, profile?.slug, me.wallet.did);
-  const publicUrl = profile?.slug && profile.visibility === "public" ? `/p/${profile.slug}` : null;
+  // The demo issuer reviews requests only; its account is not editable (D-035).
+  const demoIssuer = Boolean(me.demo && !me.sandbox);
+  const publicUrl =
+    !demoIssuer && profile?.slug && profile.visibility === "public" ? `/p/${profile.slug}` : null;
 
   return (
     <div ref={root} className="relative">
@@ -90,9 +93,11 @@ export function AccountMenu({ me }: { me: Me }) {
             </Link>
           )}
           <div className="my-1 border-t border-line" />
-          <Link role="menuitem" href="/dashboard/profile" className={ITEM}>
-            <IconUser className="h-4 w-4 text-muted" /> Ubah profil
-          </Link>
+          {!demoIssuer && (
+            <Link role="menuitem" href="/dashboard/profile" className={ITEM}>
+              <IconUser className="h-4 w-4 text-muted" /> Ubah profil
+            </Link>
+          )}
           {me.roles.includes("issuer") && (
             <Link role="menuitem" href="/issuer" className={ITEM}>
               <IconShield className="h-4 w-4 text-muted" /> Dashboard issuer

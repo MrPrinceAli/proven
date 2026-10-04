@@ -174,3 +174,13 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** Profil hanya dikenali lewat `@slug`/DID dan avatar inisial, sehingga akun demo dan profil pajangan terlihat seperti data dummy.
 **Keputusan:** Tabel `profiles` mendapat `display_name` (maks 80) dan `avatar_seed`. Avatar berupa ilustrasi DiceBear "notionists" (karya CC0 1.0) yang dirender di server sendiri (`/avatar/[seed]`, SVG di-cache 1 tahun, tanpa permintaan ke pihak ketiga dan tanpa menambah bundle browser); seed kosong memakai id profil. Pengguna bisa mengubah nama dan "Ganti avatar" di dialog profil. Profil pajangan menjadi persona fiktif **Arya Pratama** (`/p/arya-pratama`, `/p/rina-demo` dialihkan 308). Sandbox demo memakai salah satu dari 12 persona fiktif (nama + avatar yang cocok) dengan slug `nama-xxxx`. Nama diperlihatkan ke issuer yang dimintai verifikasi. Unggah foto asli belum dibuat (tidak memakai foto orang sungguhan untuk data contoh).
 **Konsekuensi:** Nama tetap off-chain (aturan emas #1) dan tidak masuk VC; kredensial lama tidak berubah.
+
+## D-035 — Integritas siklus kredensial & batas mode demo (2026-10-04)
+**Konteks:** Audit menemukan: (1) klaim VERIFIED bisa dihapus sehingga pencabutan gagal tersinkron dan `/verify` menampilkan "Aktif" untuk kredensial yang sudah dicabut on-chain; (2) kredensial dari sandbox demo tidak bisa dibedakan dari yang asli; (3) sesi "issuer demo" memakai akun issuer asli, termasuk hak admin; (4) issuer bisa memverifikasi klaimnya sendiri; (5) bukti bisa dilepas/dihapus setelah diajukan atau disetujui.
+**Keputusan:**
+1. Klaim VERIFIED tidak bisa dihapus (409). Pembaruan status klaim saat revoke/sinkronisasi memakai `updateMany` sehingga klaim lama yang sudah terhapus tidak pernah memblokir.
+2. Kredensial untuk sandbox demo (`users.auth_provider = "demo"`) bernama `[DEMO] …` dengan criteria yang menyebut mode demo; `/verify` dan profil publik mengembalikan `sandbox: true`, UI menampilkan peringatan "Kredensial demo".
+3. Sesi demo pada akun yang bukan sandbox hanya boleh `GET` (kecuali data export), rute `/issuer/*`, dan logout. Login demo tidak pernah memberi peran admin.
+4. Pemohon yang memegang alamat issuer ditolak (403) saat mengajukan dan saat approve.
+5. Bukti yang diajukan wajib tertaut ke klaim; bukti di balik permintaan `pending`/`approved` tidak bisa dilepas atau dihapus; approve memastikan semua bukti masih ada.
+**Konsekuensi:** Status di `/verify` selalu mengikuti chain; kredensial demo jujur di mana pun dibaca (termasuk verifikasi independen, karena tanda `[DEMO]` ada di dalam VC yang di-hash).

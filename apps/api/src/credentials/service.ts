@@ -70,6 +70,21 @@ async function buildDraft(
     orderBy: { verifiedAt: "asc" },
   });
   if (!wallet) throw problem(409, "conflict", "The user has no wallet on this chain");
+  if (isAddressEqual(wallet.address as Hex, issuer.address as Hex)) {
+    throw problem(403, "forbidden", "Issuer tidak bisa memverifikasi klaimnya sendiri");
+  }
+  const present = await tx.evidence.count({
+    where: { id: { in: request.evidenceIds }, userId: request.requestedBy },
+  });
+  if (present !== request.evidenceIds.length) {
+    throw problem(409, "conflict", "Sebagian bukti yang diajukan sudah tidak ada");
+  }
+  // Demo-mode sandboxes get credentials that say so in the VC itself (D-035).
+  const requester = await tx.user.findUnique({
+    where: { id: request.requestedBy },
+    select: { authProvider: true },
+  });
+  const sandbox = requester?.authProvider === "demo";
 
   const fields = kind.fields(entity);
   const description = [fields.description, fields.event, fields.org, fields.role, fields.level, fields.year]
@@ -85,9 +100,11 @@ async function buildDraft(
     subjectDid: wallet.did,
     achievement: {
       id: `urn:uuid:${entity.id}`,
-      name: kind.label(entity),
+      name: sandbox ? `[DEMO] ${kind.label(entity)}` : kind.label(entity),
       description,
-      criteria: `Diverifikasi oleh ${issuer.name} berdasarkan ${request.evidenceIds.length} bukti yang diajukan.`,
+      criteria: sandbox
+        ? `Kredensial contoh dari mode demo Proven-ID — bukan prestasi yang diverifikasi sungguhan.`
+        : `Diverifikasi oleh ${issuer.name} berdasarkan ${request.evidenceIds.length} bukti yang diajukan.`,
     },
     validFrom: now,
     validUntil: new Date(now.getTime() + VALIDITY_MS),
@@ -262,7 +279,8 @@ export async function revokeCredential(
     const request = await db.verificationRequest.findFirst({ where: { draftCredentialId: credentialId } });
     if (request) {
       const kind = CLAIM_KINDS[EntityType.parse(request.entityType)];
-      await kind.delegate(db).update({ where: { id: request.entityId }, data: { status: "REVOKED" } });
+      // updateMany: the claim may have been deleted after an earlier revocation.
+      await kind.delegate(db).updateMany({ where: { id: request.entityId }, data: { status: "REVOKED" } });
     }
     await audit(db, {
       actorType: "issuer",

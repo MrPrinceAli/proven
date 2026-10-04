@@ -2,8 +2,8 @@
 
 import { IconAward, IconFile, IconHome, IconShield, IconSparkles, IconUser } from "@proven/ui";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
 import { useSession } from "@/lib/session";
 import { AccountMenu } from "./AccountMenu";
 import { BrandMark } from "./BrandMark";
@@ -23,10 +23,15 @@ const NAV = [
 /** Professional-network layout (D-012): sticky top nav, 3 columns on desktop, bottom nav on mobile. */
 export function AppShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: me } = useSession();
-  const nav = me?.roles.includes("issuer")
-    ? [...NAV, { href: "/issuer", label: "Issuer", icon: IconShield }]
-    : NAV;
+  const issuerItem = { href: "/issuer", label: "Issuer", icon: IconShield };
+  // The demo issuer only reviews requests (D-035); its account is not a sandbox to edit.
+  const demoIssuer = Boolean(me?.demo && !me.sandbox);
+  const nav = demoIssuer ? [issuerItem] : me?.roles.includes("issuer") ? [...NAV, issuerItem] : NAV;
+  useEffect(() => {
+    if (demoIssuer && pathname.startsWith("/dashboard")) router.replace("/issuer");
+  }, [demoIssuer, pathname, router]);
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 

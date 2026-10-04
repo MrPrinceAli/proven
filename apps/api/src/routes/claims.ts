@@ -191,6 +191,14 @@ function registerCrud(app: FastifyInstance, kind: ClaimKind) {
     if (row.status === "PENDING_ISSUER") {
       throw problem(409, "conflict", "Klaim sedang menunggu issuer dan tidak bisa dihapus");
     }
+    // An active credential points at this claim; deleting it would orphan revocation (D-035).
+    if (row.status === "VERIFIED") {
+      throw problem(
+        409,
+        "conflict",
+        "Klaim terverifikasi tidak bisa dihapus selama kredensialnya aktif. Minta issuer mencabutnya, atau jadikan profil privat.",
+      );
+    }
     await prisma.$transaction(async (tx) => {
       await tx.evidenceLink.deleteMany({ where: { entityType: kind.type, entityId: id } });
       await kind.delegate(tx).delete({ where: { id } });

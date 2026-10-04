@@ -119,6 +119,44 @@ describe.skipIf(!hasDatabase)("demo mode (D-032)", () => {
     expect(allowed.statusCode).toBe(200);
   });
 
+  it("keeps the demo issuer out of the real issuer account and admin (D-035)", async () => {
+    const adminApp = await testApp({
+      config: { ...demoConfig, ADMIN_ADDRESSES: ISSUER },
+      chain: fakeChain([ISSUER]),
+    });
+    try {
+      const login = await adminApp.inject({ method: "POST", url: "/auth/demo", payload: { role: "issuer" } });
+      const cookies = cookieOf(login);
+      const me = (await adminApp.inject({ method: "GET", url: "/me", cookies })).json();
+      expect(me.roles).toContain("issuer");
+      expect(me.roles).not.toContain("admin");
+
+      const blocked = [
+        { method: "PATCH" as const, url: "/me/profile", payload: { headline: "diubah pengunjung" } },
+        { method: "POST" as const, url: "/me/achievements", payload: { title: "x" } },
+        { method: "GET" as const, url: "/me/data-export" },
+        { method: "POST" as const, url: "/ai/summary", payload: {} },
+        { method: "POST" as const, url: "/admin/seed-demo", payload: { demoUserAddress: ISSUER } },
+      ];
+      for (const req of blocked) {
+        expect((await adminApp.inject({ ...req, cookies })).statusCode, `${req.method} ${req.url}`).toBe(403);
+      }
+      expect((await adminApp.inject({ method: "GET", url: "/me/claims", cookies })).statusCode).toBe(200);
+
+      // A visitor's own sandbox stays fully editable.
+      const sandbox = await adminApp.inject({ method: "POST", url: "/auth/demo", payload: { role: "user" } });
+      const own = await adminApp.inject({
+        method: "PATCH",
+        url: "/me/profile",
+        cookies: cookieOf(sandbox),
+        payload: { headline: "Milik sandbox" },
+      });
+      expect(own.statusCode).toBe(200);
+    } finally {
+      await adminApp.close();
+    }
+  });
+
   it("shows the demo issuer the newest sandbox first", async () => {
     const older = (await demo({ role: "user" })).json();
     const newer = (await demo({ role: "user" })).json();

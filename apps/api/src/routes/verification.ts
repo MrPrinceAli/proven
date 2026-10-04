@@ -117,9 +117,19 @@ export async function verificationRoutes(app: FastifyInstance) {
     const evidenceIds = [...new Set(body.evidenceIds)];
     const owned = await prisma.evidence.count({ where: { id: { in: evidenceIds }, userId } });
     if (owned !== evidenceIds.length) throw problem(404, "not-found", "Evidence not found");
+    // Only evidence linked to this claim may back the request (D-035).
+    const linked = await prisma.evidenceLink.count({
+      where: { evidenceId: { in: evidenceIds }, entityType: body.entityType, entityId: body.entityId },
+    });
+    if (linked !== evidenceIds.length) {
+      throw problem(422, "evidence-required", "Semua bukti yang diajukan harus tertaut ke klaim ini");
+    }
 
     const issuer = await prisma.issuer.findFirst({ where: { id: body.issuerId, verified: true } });
     if (!issuer) throw problem(404, "not-found", "Issuer not found");
+    // No self-issuance: an issuer cannot verify their own claims (D-035).
+    const self = await prisma.wallet.count({ where: { userId, address: issuer.address } });
+    if (self > 0) throw problem(403, "forbidden", "Issuer tidak bisa memverifikasi klaimnya sendiri");
     if (!REQUESTABLE.has(entity.status)) {
       throw problem(409, "conflict", `Klaim berstatus ${entity.status} tidak bisa diajukan`);
     }
