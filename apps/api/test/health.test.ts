@@ -26,3 +26,17 @@ describe("GET /health", () => {
     });
   });
 });
+
+describe("rate limiting", () => {
+  it("answers 429 problem+json once the SIWE limit is exceeded", async () => {
+    const app = await testApp({}, { max: 1000, authMax: 2 });
+    const hit = () =>
+      app.inject({ method: "POST", url: "/auth/siwe/nonce", payload: { address: "0x0", chainId: 97 } });
+    await hit();
+    await hit();
+    const res = await hit();
+    expect(res.statusCode).toBe(429);
+    expect(res.json().type).toBe("https://proven.app/problems/rate-limited");
+    await app.close();
+  });
+});

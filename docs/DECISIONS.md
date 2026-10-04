@@ -99,3 +99,18 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** Tidak ada server/laptop untuk menjalankan `prisma migrate deploy`; Neon membuat branch DB per preview.
 **Keputusan:** Build Command project Vercel = `pnpm run build:vercel` (`apps/web`), yang menjalankan `packages/db/scripts/migrate-deploy.mjs` lalu `next build`. Jika `DATABASE_URL` belum ada, migrasi dilewati dengan peringatan dan API menjawab 503 problem+json berisi nama variabel yang kurang.
 **Konsekuensi:** Setiap deploy preview/production memigrasi DB-nya sendiri. Build tetap hijau sebelum Neon tersambung.
+
+## D-020 — Klaim yang sedang/selesai diverifikasi dikunci (2026-10-04, W3)
+**Konteks:** Spesifikasi tidak mengatur edit klaim setelah diajukan atau diverifikasi. Mengubah teks klaim `VERIFIED` akan membuat badge "Terverifikasi" menempel pada isi yang tidak pernah dilihat issuer (melanggar aturan emas #3).
+**Keputusan:** `PATCH` klaim hanya untuk status `UNVERIFIED`/`EVIDENCE_ATTACHED` (lainnya 409). `DELETE` ditolak hanya saat `PENDING_ISSUER` (agar request issuer tidak yatim). Status tidak pernah bisa dikirim klien (schema `.strict()`).
+**Konsekuensi:** Mengoreksi klaim terverifikasi = buat klaim baru dan ajukan ulang.
+
+## D-021 — Detail API evidence (2026-10-04, W3)
+**Konteks:** Kolom `evidence.type` wajib (NOT NULL) tetapi FR-05 mengklasifikasikannya dengan AI baru di W6; spesifikasi menulis "POST/DELETE /me/evidence/:id/links".
+**Keputusan:** `type` opsional saat upload dengan default `certificate`, bisa dikoreksi lewat `PATCH`/UI. Unlink memakai `DELETE /me/evidence/:id/links?entityType=…&entityId=…` (query, bukan body). Tambahan `GET /me/claims` (semua klaim + jumlah per status) untuk dashboard dan halaman profil. Rate limit SIWE bisa diatur lewat `buildApp({ rateLimit })` (test memakai limit tinggi; ada test 429).
+**Konsekuensi:** Tidak ada klasifikasi otomatis sebelum W6; UI meminta jenis bukti saat upload.
+
+## D-022 — Region Singapura untuk database dan server (2026-10-04)
+**Konteks:** Neon dibuat di Singapura (`sin1`), sedangkan Vercel Functions default di Washington (`iad1`); tiap query akan menyeberang benua.
+**Keputusan:** Project Vercel `serverlessFunctionRegion = sin1` (diatur lewat Vercel API). Neon: region `sin1`, env Sensitive untuk Preview + Production (tanpa Development, karena tidak ada runtime di laptop), branch DB per preview.
+**Konsekuensi:** Latensi API–DB rendah dan dekat dengan pengguna Indonesia.

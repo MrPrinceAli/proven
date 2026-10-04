@@ -5,11 +5,15 @@ export interface Problem {
   title: string;
   status: number;
   detail?: string;
+  errors?: { path: string; message: string }[];
 }
 
 export class ApiError extends Error {
   constructor(readonly problem: Problem) {
-    super(problem.detail ?? problem.title);
+    const first = problem.errors?.[0];
+    super(
+      first ? `${first.path ? `${first.path}: ` : ""}${first.message}` : (problem.detail ?? problem.title),
+    );
   }
   get status() {
     return this.problem.status;

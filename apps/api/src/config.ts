@@ -16,6 +16,9 @@ const EnvSchema = z.object({
   RPC_URL: z.string().url(),
   APP_DOMAIN: z.string().min(1),
   APP_URL: z.string().url(),
+  EVIDENCE_ENC_KEY: z.string().refine((value) => Buffer.from(value, "base64").length === 32, {
+    message: "must be 32 bytes encoded as base64 (openssl rand -base64 32)",
+  }),
   ADMIN_ADDRESSES: z
     .string()
     .default("")
@@ -39,6 +42,8 @@ export interface Config {
   chainId: number;
   rpcUrl: string;
   appUrl: string;
+  /** AES-256-GCM key for evidence at rest (32 bytes). */
+  evidenceKey: Buffer;
   adminAddresses: string[];
   /** Hosts a SIWE message may name as its `domain` (D-007). */
   allowedDomains: string[];
@@ -78,6 +83,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     chainId: e.CHAIN_ID,
     rpcUrl: e.RPC_URL,
     appUrl: e.APP_URL,
+    evidenceKey: Buffer.from(e.EVIDENCE_ENC_KEY, "base64"),
     adminAddresses: e.ADMIN_ADDRESSES,
     allowedDomains,
     allowedOrigins,

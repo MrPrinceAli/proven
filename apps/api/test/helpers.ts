@@ -23,6 +23,7 @@ export function testConfig(overrides: Record<string, string> = {}): Config {
     RPC_URL: "http://127.0.0.1:1",
     APP_DOMAIN: TEST_DOMAIN,
     APP_URL: TEST_ORIGIN,
+    EVIDENCE_ENC_KEY: Buffer.alloc(32, 7).toString("base64"),
     ADMIN_ADDRESSES: "",
     ...overrides,
   });
@@ -34,8 +35,11 @@ export function testPrisma(): PrismaClient {
   return sharedPrisma;
 }
 
-export async function testApp(configOverrides: Record<string, string> = {}): Promise<FastifyInstance> {
-  return buildApp({ config: testConfig(configOverrides), prisma: testPrisma() });
+export async function testApp(
+  configOverrides: Record<string, string> = {},
+  rateLimit = { max: 10_000, authMax: 10_000 },
+): Promise<FastifyInstance> {
+  return buildApp({ config: testConfig(configOverrides), prisma: testPrisma(), rateLimit });
 }
 
 /** Empties every table between tests (TRUNCATE does not fire the audit_logs row trigger). */
@@ -90,4 +94,45 @@ export function sessionCookie(response: LightMyRequestResponse): Record<string, 
   const cookie = response.cookies.find((c) => c.name === SESSION_COOKIE);
   if (!cookie) throw new Error("no session cookie in response");
   return { [SESSION_COOKIE]: cookie.value };
+}
+
+/** Signs in a fresh wallet and returns its session cookie. */
+export async function loginAs(app: FastifyInstance, account: PrivateKeyAccount = newAccount()) {
+  const { response } = await signIn(app, account);
+  if (response.statusCode !== 200) throw new Error(`login failed: ${response.body}`);
+  return { account, cookies: sessionCookie(response), userId: response.json().userId as string };
+}
+
+export const PDF = Buffer.from(
+  "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n",
+);
+
+/** Builds a multipart/form-data body with fields first, then the file. */
+export async function multipart(
+  file: { data: Buffer; filename: string; type?: string },
+  fields: Record<string, string> = {},
+) {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(fields)) form.append(k, v);
+  form.append(
+    "file",
+    new Blob([file.data], { type: file.type ?? "application/octet-stream" }),
+    file.filename,
+  );
+  const res = new Response(form);
+  return {
+    payload: Buffer.from(await res.arrayBuffer()),
+    headers: { "content-type": res.headers.get("content-type")! },
+  };
+}
+
+export async function upload(
+  app: FastifyInstance,
+  cookies: Record<string, string>,
+  data: Buffer = PDF,
+  filename = "sertifikat.pdf",
+  fields: Record<string, string> = {},
+) {
+  const body = await multipart({ data, filename }, fields);
+  return app.inject({ method: "POST", url: "/me/evidence", cookies, ...body });
 }

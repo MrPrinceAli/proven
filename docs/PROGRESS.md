@@ -6,8 +6,8 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 |---|---|---|
 | W0 Fondasi Monorepo | ✅ selesai — CI hijau, preview Vercel jalan | `w0-monorepo-foundation` · PR #1 |
 | W1 Smart Contracts | ✅ selesai — CI hijau (deploy testnet menunggu langkah manual) | `w1-smart-contracts` · PR #2 |
-| W2 Auth & Database | ✅ selesai (login di preview menunggu Neon) | `w2-auth-database` |
-| W3 Profil & Evidence | ⏳ belum | — |
+| W2 Auth & Database | ✅ selesai — CI hijau, login jalan di preview | `w2-auth-database` · PR #3 |
+| W3 Profil & Evidence | ✅ selesai — CI hijau, alur jalan di preview | `w3-profile-evidence` |
 | W4–W8 | ⏳ belum | — |
 
 ---
@@ -79,3 +79,33 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 2. Redeploy (Deployments → ⋯ → Redeploy) atau push commit baru.
 3. Opsional: buat Project ID gratis di cloud.reown.com (tambahkan domain `*.vercel.app`) → Vercel Env `NEXT_PUBLIC_REOWN_PROJECT_ID`. Tanpa ini login tetap bisa memakai MetaMask.
 4. MetaMask → tambahkan jaringan BNB Smart Chain Testnet (chainId 97). Login tidak butuh tBNB.
+
+---
+
+## W3 — Profil & Evidence (2026-10-04)
+
+**Selesai — API**
+- `PATCH /me/profile`: headline, summary, visibility, slug (3–40 `[a-z0-9-]`, dinormalisasi huruf kecil, unik case-insensitive via citext → 409, kata cadangan ditolak).
+- CRUD `/me/skills|experiences|projects|achievements|community` (POST, GET, PATCH `/:id`, DELETE `/:id`): Zod `.strict()`, object-level authz (milik orang lain → 404), status default `UNVERIFIED`, klaim terverifikasi/menunggu dikunci (D-020), audit log tiap mutasi. `GET /me/claims` untuk ringkasan per status.
+- Evidence: upload multipart maks 4 MB (413), MIME dari magic bytes PDF/PNG/JPG (415), SHA-256 atas plaintext, AES-256-GCM (IV 12 byte per file, iv+tag di metadata), ciphertext di `evidence_blobs` lewat `EvidenceStore` (D-004), chain of custody (`metadata.custody[]` + audit `evidence.uploaded`). List, download dengan dekripsi + cek ulang SHA-256 (409 `integrity-mismatch`), koreksi type/judul, hapus, link/unlink dengan transisi `UNVERIFIED ⇄ EVIDENCE_ATTACHED` tanpa pernah menurunkan `PENDING_ISSUER/VERIFIED/REVOKED/EXPIRED`.
+- `GET /p/:slug` publik: hanya `visibility=public`; private/recruiter-only/suspended → 404; DID terpotong; tanpa email, storage key, hash, atau isi evidence.
+- Test API total 81 (W3 menambah 52): hash deterministik = hash file asli, 4 MB+1 → 413, `.exe` berganti nama `.pdf` → 415, evidence user lain → 404, download memverifikasi integritas (ciphertext diubah → 409), profil privat → 404, slug "Rina" vs "rina" → 409, link → `EVIDENCE_ATTACHED`, plus unlink/hapus/rate-limit.
+
+**Selesai — UI**
+- Design system "Ledger & Seal" (D-012) di `packages/ui`: token hijau + preset Tailwind, Button, Card/SectionCard, Badge, Input/Textarea/Select berlabel, Dialog (native `<dialog>`), StatusBadge (7 status, ikon + teks), Avatar, EmptyState, Toast (aria-live), 24 ikon inline.
+- AppShell ala jejaring profesional: top nav sticky + pencarian (segera hadir), 3 kolom desktop (kartu profil mini · konten · legenda status), bottom nav mobile, skip link.
+- `/dashboard`: jumlah klaim per status + checklist langkah. `/dashboard/profile`: header berbanner hijau + avatar, dialog edit profil, 5 section klaim dengan tambah/ubah/hapus + StatusBadge. `/dashboard/evidence`: dropzone (validasi 4 MB di browser), daftar bukti dengan SHA-256 yang bisa disalin, koreksi jenis, tautkan/lepas klaim, unduh, hapus. `/p/[slug]`: profil publik read-only dengan layout yang sama.
+- Diverifikasi lokal lewat `next start` + Postgres: alur gerbang W3 lengkap (profil → upload PDF → SHA-256 = `shasum` → tautkan → `EVIDENCE_ATTACHED` → `/p/slug` tanpa login → privat → 404); screenshot desktop & mobile profil publik dicek.
+
+**Tertunda**
+- Uji di preview Vercel menunggu Neon tersambung (langkah manual W2).
+
+**Langkah manual untuk user**
+- Setelah Neon tersambung: buka preview PR W3 → login MetaMask → isi profil + slug → tambah prestasi → unggah PDF → tautkan → buka `/p/<slug>` di jendela incognito (perlu Deployment Protection preview dimatikan, atau cek di production setelah merge).
+
+---
+
+## Neon tersambung (2026-10-04)
+- Resource `proven-neon` (Neon Free, region Singapura `sin1`), env Sensitive `DATABASE_URL` + `DATABASE_URL_UNPOOLED` untuk Preview + Production. Vercel Functions dipindah ke `sin1` (D-022).
+- Redeploy preview W3: `prisma migrate deploy` menerapkan `20261004000000_init` di Neon.
+- Diuji langsung di preview Vercel (`vercel curl`): `/api/health` ok; login SIWE → `/api/me` `did:ethr:97:…`; pesan SIWE yang sama ditolak saat diulang; buat prestasi → upload PDF (SHA-256 = `shasum`) → tautkan → `EVIDENCE_ATTACHED` → download identik.
