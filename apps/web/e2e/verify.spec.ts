@@ -53,9 +53,11 @@ test("a VC changed by one character is reported as Tidak cocok", async ({ page, 
 
 test("the public profile lists the credential with a QR code and a verify link", async ({ page }) => {
   await page.goto(`/p/${slug}`);
-  await expect(page.getByRole("heading", { name: `@${slug}` })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Nadia Putri" })).toBeVisible();
+  await expect(page.getByText(`@${slug}`, { exact: true })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Foto profil Nadia Putri" })).toBeVisible();
   await expect(page.getByText("XYZ Hackathon 2026 — Winner").first()).toBeVisible();
-  await expect(page.getByRole("img", { name: `Kode QR menuju profil publik @${slug}` })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Kode QR menuju profil publik Nadia Putri" })).toBeVisible();
   await page.getByRole("link", { name: "Verifikasi kredensial ini" }).click();
   await expect(sealOf(page)).toHaveAttribute("data-seal", "active");
 });

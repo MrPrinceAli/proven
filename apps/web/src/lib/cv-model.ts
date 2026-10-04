@@ -37,7 +37,7 @@ function verifiedLinks(claims: ClaimsResponse, requests: MyRequest[], origin: st
 }
 
 const header = (me: Me) => ({
-  name: me.profile?.slug ? `@${me.profile.slug}` : "Profil Proven-ID",
+  name: me.profile?.displayName || (me.profile?.slug ? `@${me.profile.slug}` : "Profil Proven-ID"),
   headline: me.profile?.headline ?? "",
   summary: me.profile?.summary ?? "",
   did: me.wallet?.did ?? "",

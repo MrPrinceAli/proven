@@ -21,9 +21,13 @@ describe.skipIf(!hasDatabase)("pnpm db:seed (§W8 2)", () => {
   it("creates the demo issuer, profile, claims, certificate and one pending request", async () => {
     const result = await seedDemo(input());
     const db = testPrisma();
-    expect(result.slug).toBe("rina-demo");
+    expect(result.slug).toBe("arya-pratama");
     expect(await db.issuer.count({ where: { verified: true, name: "XYZ Community" } })).toBe(1);
-    expect((await db.profile.findFirstOrThrow({ where: { slug: "rina-demo" } })).visibility).toBe("public");
+    expect(await db.profile.findFirstOrThrow({ where: { slug: "arya-pratama" } })).toMatchObject({
+      visibility: "public",
+      displayName: "Arya Pratama",
+      avatarSeed: "pv-0",
+    });
 
     const achievement = await db.achievement.findFirstOrThrow({
       where: { title: "XYZ Hackathon 2026 — Winner" },
@@ -54,6 +58,21 @@ describe.skipIf(!hasDatabase)("pnpm db:seed (§W8 2)", () => {
     expect(await db.verificationRequest.count()).toBe(1);
   });
 
+  it("moves an older showcase to the current persona and slug", async () => {
+    const { userId } = await seedDemo(input());
+    const db = testPrisma();
+    await db.profile.update({
+      where: { userId },
+      data: { slug: "rina-demo", displayName: "", avatarSeed: null },
+    });
+    await seedDemo(input());
+    expect(await db.profile.findUniqueOrThrow({ where: { userId } })).toMatchObject({
+      slug: "arya-pratama",
+      displayName: "Arya Pratama",
+      avatarSeed: "pv-0",
+    });
+  });
+
   it("runs inside the deployment through the admin-only endpoint", async () => {
     const admin = newAccount();
     const issuer = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
@@ -72,7 +91,7 @@ describe.skipIf(!hasDatabase)("pnpm db:seed (§W8 2)", () => {
       const res = await app.inject({ method: "POST", url: "/admin/seed-demo", cookies, payload: body });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toMatchObject({
-        slug: "rina-demo",
+        slug: "arya-pratama",
         did: "did:ethr:97:0x90f79bf6eb2c4f870365e785982e1f101e93b906",
       });
       expect(await testPrisma().verificationRequest.count({ where: { state: "pending" } })).toBe(1);

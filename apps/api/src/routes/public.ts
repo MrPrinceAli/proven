@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { CLAIM_KIND_LIST, linkedEvidence } from "../claims";
+import { profileIdentity } from "../identity";
 import { problem } from "../problem";
 import { publicCredentials } from "./verify";
 
@@ -47,6 +48,7 @@ export async function publicRoutes(app: FastifyInstance) {
     const wallet = profile.user.wallets[0];
     return {
       slug: profile.slug,
+      ...profileIdentity(profile),
       headline: profile.headline,
       summary: profile.summary,
       did: wallet ? truncateDid(wallet.did) : null,

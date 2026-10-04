@@ -169,3 +169,8 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** User meminta nama aplikasi diseragamkan menjadi "Proven-ID".
 **Keputusan:** Semua teks yang terlihat pengguna (judul, logo, metadata, pesan SIWE, CV PDF, landing) memakai "Proven-ID". Identitas protokol **tidak** diubah: domain EIP-712 tetap `name: "Proven"`, cryptosuite `eip712-secp256k1-proven-2026`, nama paket `@proven/*`, dan repo `proven`.
 **Konsekuensi:** Kredensial yang sudah terbit dan tanda tangannya tetap valid; tidak perlu deploy ulang kontrak.
+
+## D-034 — Nama tampilan & avatar ilustrasi (2026-10-04)
+**Konteks:** Profil hanya dikenali lewat `@slug`/DID dan avatar inisial, sehingga akun demo dan profil pajangan terlihat seperti data dummy.
+**Keputusan:** Tabel `profiles` mendapat `display_name` (maks 80) dan `avatar_seed`. Avatar berupa ilustrasi DiceBear "notionists" (karya CC0 1.0) yang dirender di server sendiri (`/avatar/[seed]`, SVG di-cache 1 tahun, tanpa permintaan ke pihak ketiga dan tanpa menambah bundle browser); seed kosong memakai id profil. Pengguna bisa mengubah nama dan "Ganti avatar" di dialog profil. Profil pajangan menjadi persona fiktif **Arya Pratama** (`/p/arya-pratama`, `/p/rina-demo` dialihkan 308). Sandbox demo memakai salah satu dari 12 persona fiktif (nama + avatar yang cocok) dengan slug `nama-xxxx`. Nama diperlihatkan ke issuer yang dimintai verifikasi. Unggah foto asli belum dibuat (tidak memakai foto orang sungguhan untuk data contoh).
+**Konsekuensi:** Nama tetap off-chain (aturan emas #1) dan tidak masuk VC; kredensial lama tidak berubah.

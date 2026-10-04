@@ -118,8 +118,8 @@ function Queue() {
                 </span>
                 <span className="font-medium text-ink">{r.claim.label}</span>
                 <span className="text-xs text-muted">
-                  {r.requester.did ? shortDid(r.requester.did) : "—"} · {r.evidenceCount ?? 0} bukti ·{" "}
-                  {dateFormat.format(new Date(r.createdAt))}
+                  {r.requester.displayName || (r.requester.did ? shortDid(r.requester.did) : "—")} ·{" "}
+                  {r.evidenceCount ?? 0} bukti · {dateFormat.format(new Date(r.createdAt))}
                 </span>
               </button>
             </li>
@@ -196,8 +196,13 @@ function RequestPanel({ id, onDone }: { id: string; onDone: () => void }) {
             </div>
           ))}
           <dt className="text-muted">Pemohon</dt>
-          <dd className="font-mono text-xs">
-            {data.requester.did}
+          <dd className="text-xs">
+            {data.requester.displayName && (
+              <span className="mb-0.5 block text-sm font-semibold text-ink">
+                {data.requester.displayName}
+              </span>
+            )}
+            <span className="font-mono">{data.requester.did}</span>
             {data.requester.slug && (
               <a
                 href={`/p/${data.requester.slug}`}

@@ -5,6 +5,7 @@ import { CLAIM_KINDS, syncClaimStatus } from "../claims";
 import { encrypt, sha256 } from "../evidence/crypto";
 import { postgresEvidenceStore } from "../evidence/store";
 import { bootstrapIssuer, type IssuerIdentity } from "../issuers/register";
+import { SHOWCASE, type Persona } from "./personas";
 
 export interface SeedInput {
   prisma: PrismaClient;
@@ -13,18 +14,19 @@ export interface SeedInput {
   issuer: IssuerIdentity;
   /** Wallet the presenter logs in with during the demo (EIP-55). */
   demoAddress: string;
-  /** Public slug; defaults to "rina-demo" (skipped when taken). */
+  /** Public slug; defaults to the showcase slug (skipped when taken). */
   slug?: string;
+  /** Who the example profile belongs to; defaults to the showcase persona (D-034). */
+  persona?: Persona;
   /** "demo" marks wallet-less sandbox users created by demo mode (D-032). */
   authProvider?: "wallet" | "demo";
 }
 
-const DEMO_SLUG = "rina-demo";
 const ACHIEVEMENT = "XYZ Hackathon 2026 — Winner";
 const CERT_FILE = "sertifikat-xyz-hackathon-2026.pdf";
 
 /** A certificate PDF generated on the fly (§W8 2), so the demo needs no binary fixture in git. */
-export async function certificatePdf(issuerName: string): Promise<Buffer> {
+export async function certificatePdf(issuerName: string, recipient: string): Promise<Buffer> {
   const doc = await PDFDocument.create();
   doc.setTitle("Sertifikat XYZ Hackathon 2026");
   const page = doc.addPage([842, 595]);
@@ -34,7 +36,12 @@ export async function certificatePdf(issuerName: string): Promise<Buffer> {
   page.drawRectangle({ x: 24, y: 24, width: 794, height: 547, borderColor: green, borderWidth: 4 });
   page.drawText("SERTIFIKAT PENGHARGAAN", { x: 220, y: 470, size: 32, font: bold, color: green });
   page.drawText("diberikan kepada pemilik profil Proven-ID", { x: 285, y: 420, size: 14, font: regular });
-  page.drawText("@rina-demo", { x: 345, y: 370, size: 28, font: bold });
+  page.drawText(recipient, {
+    x: (842 - bold.widthOfTextAtSize(recipient, 28)) / 2,
+    y: 370,
+    size: 28,
+    font: bold,
+  });
   page.drawText("sebagai JUARA 1 (Winner) XYZ Hackathon 2026", { x: 230, y: 310, size: 18, font: regular });
   page.drawText("Peringkat pertama dari 120 tim.", { x: 320, y: 280, size: 14, font: regular });
   page.drawText(`${issuerName} · 2026`, { x: 330, y: 120, size: 14, font: regular });
@@ -58,7 +65,8 @@ export async function seedDemo({
   evidenceKey,
   issuer,
   demoAddress,
-  slug = DEMO_SLUG,
+  slug = SHOWCASE.slug,
+  persona = SHOWCASE,
   authProvider = "wallet",
 }: SeedInput) {
   const issuerRow = await bootstrapIssuer(prisma, issuer);
@@ -76,6 +84,8 @@ export async function seedDemo({
   await prisma.profile.update({
     where: { userId },
     data: {
+      displayName: persona.displayName,
+      avatarSeed: persona.avatarSeed,
       headline: "Smart Contract Engineer · BNB Chain",
       summary:
         "Membangun dApp dan tooling Web3 di Indonesia. Fokus pada Solidity, keamanan kontrak, dan identitas profesional yang bisa diverifikasi.",
@@ -124,7 +134,7 @@ export async function seedDemo({
     (e) => (e.metadata as { filename?: string }).filename === CERT_FILE,
   );
   if (!evidence) {
-    const pdf = await certificatePdf(issuer.name);
+    const pdf = await certificatePdf(issuer.name, persona.displayName);
     const digest = sha256(pdf);
     const sealed = encrypt(evidenceKey, pdf);
     evidence = await prisma.$transaction(async (tx) => {

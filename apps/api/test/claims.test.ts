@@ -47,6 +47,17 @@ describe.skipIf(!hasDatabase)("profile and claims API", () => {
       });
     });
 
+    it("sets the display name and avatar seed; a null seed falls back to the profile id", async () => {
+      const { cookies } = await loginAs(app);
+      const res = await patchProfile(cookies, { displayName: "  Salsa Maharani ", avatarSeed: "pv-44" });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ displayName: "Salsa Maharani", avatarSeed: "pv-44" });
+      const reset = (await patchProfile(cookies, { avatarSeed: null })).json();
+      expect(reset.avatarSeed).toMatch(/^[0-9a-f-]{36}$/);
+      expect((await patchProfile(cookies, { displayName: "x".repeat(81) })).statusCode).toBe(400);
+      expect((await patchProfile(cookies, { avatarSeed: "<svg>" })).statusCode).toBe(400);
+    });
+
     it("treats slugs case-insensitively: 'Rina' conflicts with 'rina'", async () => {
       const a = await loginAs(app);
       const b = await loginAs(app);

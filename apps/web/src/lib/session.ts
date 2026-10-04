@@ -7,6 +7,10 @@ export interface Me {
   user: { id: string; status: string; createdAt: string };
   wallet: { address: string; chainId: number; did: string } | null;
   profile: {
+    /** D-034: shown instead of the @slug when set. */
+    displayName: string;
+    /** Seed for the illustrated avatar (never null for an existing profile). */
+    avatarSeed: string;
     headline: string;
     summary: string;
     visibility: "public" | "private" | "recruiter-only";

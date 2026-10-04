@@ -13,6 +13,8 @@
     "e2e": "tsx e2e/run.ts"
   },
   "dependencies": {
+    "@dicebear/core": "9.4.2",
+    "@dicebear/notionists": "9.4.2",
     "@prisma/client": "5.22.0",
     "@proven/api": "workspace:*",
     "@proven/contracts": "workspace:^",

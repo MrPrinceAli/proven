@@ -12,6 +12,7 @@ import { audit } from "../audit";
 import { requireIssuer, requireUser } from "../auth/guards";
 import { CLAIM_KINDS } from "../claims";
 import { approveRequest, credentialUrn, rejectRequest, revokeCredential } from "../credentials/service";
+import { profileIdentity } from "../identity";
 import { problem } from "../problem";
 import { assertDemoScope } from "./demo";
 import { readEvidence, sendEvidence } from "./evidence";
@@ -220,6 +221,8 @@ export async function verificationRoutes(app: FastifyInstance) {
           did: r.requester.wallets[0]?.did ?? null,
           slug: r.requester.profile?.visibility === "public" ? r.requester.profile.slug : null,
           headline: r.requester.profile?.headline ?? "",
+          // The requester shares their name with the issuer they ask (D-034).
+          ...profileIdentity(r.requester.profile),
         },
         state: r.state,
         evidenceCount: r.evidenceIds.length,
@@ -253,6 +256,7 @@ export async function verificationRoutes(app: FastifyInstance) {
         did: row.requester.wallets[0]?.did ?? null,
         slug: row.requester.profile?.visibility === "public" ? row.requester.profile.slug : null,
         headline: row.requester.profile?.headline ?? "",
+        ...profileIdentity(row.requester.profile),
       },
       state: row.state,
       reason: row.decisionReason,

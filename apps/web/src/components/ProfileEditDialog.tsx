@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, Dialog, Input, Select, Textarea, useToast } from "@proven/ui";
+import { Avatar, Button, Dialog, Input, Select, Textarea, useToast } from "@proven/ui";
 import { useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
+import { AVATAR_CHOICES, avatarUri } from "@/lib/avatar";
 import { useUpdateProfile } from "@/lib/queries";
 import type { Me } from "@/lib/session";
 
@@ -20,6 +21,8 @@ export function ProfileEditDialog({
   onClose: () => void;
 }) {
   const [values, setValues] = useState({
+    displayName: profile.displayName,
+    avatarSeed: profile.avatarSeed,
     headline: profile.headline,
     summary: profile.summary,
     visibility: profile.visibility,
@@ -58,6 +61,33 @@ export function ProfileEditDialog({
       }
     >
       <form id="profile-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <Avatar
+            seed={values.avatarSeed}
+            label="Pratinjau avatar"
+            src={avatarUri(values.avatarSeed)}
+            size={64}
+          />
+          <Button
+            variant="secondary"
+            onClick={() =>
+              setValues((v) => {
+                const options = AVATAR_CHOICES.filter((s) => s !== v.avatarSeed);
+                return { ...v, avatarSeed: options[Math.floor(Math.random() * options.length)]! };
+              })
+            }
+          >
+            Ganti avatar
+          </Button>
+        </div>
+        <Input
+          label="Nama"
+          maxLength={80}
+          placeholder="Nama lengkap atau nama profesional"
+          hint="Tampil di profil dan CV. Tidak pernah dicatat di blockchain."
+          value={values.displayName}
+          onChange={(e) => setValues((v) => ({ ...v, displayName: e.target.value }))}
+        />
         <Input
           label="Headline"
           maxLength={160}
@@ -74,7 +104,7 @@ export function ProfileEditDialog({
         />
         <Input
           label="Slug profil publik"
-          hint="3–40 karakter: huruf kecil, angka, dan tanda hubung. Contoh: rina-dev → /p/rina-dev"
+          hint="3–40 karakter: huruf kecil, angka, dan tanda hubung. Contoh: arya-dev → /p/arya-dev"
           pattern="[A-Za-z0-9][A-Za-z0-9\-]{1,38}[A-Za-z0-9]"
           value={values.slug}
           onChange={(e) => setValues((v) => ({ ...v, slug: e.target.value }))}

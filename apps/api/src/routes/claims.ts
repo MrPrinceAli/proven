@@ -4,6 +4,7 @@ import { z } from "zod";
 import { audit } from "../audit";
 import { requireUser } from "../auth/guards";
 import { CLAIM_KIND_LIST, linkedEvidence, serializeClaim, type ClaimKind } from "../claims";
+import { profileIdentity } from "../identity";
 import { problem } from "../problem";
 
 /** Slugs that would collide with app routes (§W3). */
@@ -27,6 +28,12 @@ const Slug = z
 
 const ProfilePatch = z
   .object({
+    displayName: z.string().trim().max(80),
+    avatarSeed: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z0-9_-]{1,64}$/, "avatarSeed: 1–64 karakter A-Z, a-z, 0-9, '_' atau '-'")
+      .nullable(),
     headline: z.string().trim().max(160),
     summary: z.string().trim().max(2600),
     visibility: Visibility,
@@ -69,11 +76,22 @@ export async function claimRoutes(app: FastifyInstance) {
       action: "profile.updated",
       entityType: "profile",
       entityId: profile.id,
-      before: { headline: before.headline, visibility: before.visibility, slug: before.slug },
-      after: { headline: profile.headline, visibility: profile.visibility, slug: profile.slug },
+      before: {
+        displayName: before.displayName,
+        headline: before.headline,
+        visibility: before.visibility,
+        slug: before.slug,
+      },
+      after: {
+        displayName: profile.displayName,
+        headline: profile.headline,
+        visibility: profile.visibility,
+        slug: profile.slug,
+      },
       ip: request.ip,
     });
     return {
+      ...profileIdentity(profile),
       headline: profile.headline,
       summary: profile.summary,
       visibility: profile.visibility,

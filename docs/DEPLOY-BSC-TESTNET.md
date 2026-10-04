@@ -77,7 +77,7 @@ Connection string) dan `EVIDENCE_ENC_KEY` (**harus sama** dengan yang di Vercel;
 buat nilai baru dengan `openssl rand -base64 32` lalu isi di **kedua** tempat, kemudian redeploy).
 
 Actions → ops → `db-seed`, isi `demo_user_address` dengan address MetaMask yang akan kamu pakai login saat demo.
-Hasil: profil `/p/rina-demo`, sertifikat PDF, skill Rust tanpa bukti, dan satu permintaan verifikasi *pending*.
+Hasil: profil `/p/arya-pratama`, sertifikat PDF, skill Rust tanpa bukti, dan satu permintaan verifikasi *pending*.
 
 ## 9. Smoke test
 

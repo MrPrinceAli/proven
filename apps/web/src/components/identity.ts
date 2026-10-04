@@ -1,13 +1,22 @@
 import { shortDid } from "@/lib/chains";
 
-/** Proven has no name field: profiles are known by their slug, otherwise by their DID. */
-export function displayName(slug: string | null | undefined, did: string | null | undefined): string {
+/** The profile's display name (D-034), else its @slug, else its short DID. */
+export function displayName(
+  name: string | null | undefined,
+  slug: string | null | undefined,
+  did: string | null | undefined,
+): string {
+  if (name?.trim()) return name.trim();
   if (slug) return `@${slug}`;
   return did ? shortDid(did) : "Profil Proven-ID";
 }
 
-export function avatarLabel(slug: string | null | undefined, did: string | null | undefined): string {
-  if (slug) return slug.replace(/-/g, "");
-  const address = did?.split(":").pop() ?? "";
-  return address.slice(2, 4) || "PR";
+export function avatarLabel(
+  name: string | null | undefined,
+  slug: string | null | undefined,
+  did: string | null | undefined,
+): string {
+  if (name?.trim()) return `Foto profil ${name.trim()}`;
+  if (slug) return `Foto profil @${slug}`;
+  return did ? `Foto profil ${shortDid(did)}` : "Foto profil";
 }
