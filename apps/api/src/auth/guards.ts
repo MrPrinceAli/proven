@@ -15,10 +15,18 @@ export async function requireUser(request: FastifyRequest): Promise<void> {
   request.auth = session;
 }
 
+/**
+ * Issuer = verified row in `issuers` AND active in IssuerRegistry on-chain (§W4).
+ * Fails closed: no chain configured or an RPC error means "not an issuer".
+ */
 export async function isIssuer(request: FastifyRequest, address: string): Promise<boolean> {
-  // On-chain IssuerRegistry.isActive is added to this check in W4.
   const issuer = await request.server.prisma.issuer.findFirst({ where: { address, verified: true } });
-  return issuer !== null;
+  if (!issuer || !request.server.chain) return false;
+  try {
+    return await request.server.chain.isIssuerActive(address as `0x${string}`);
+  } catch {
+    return false;
+  }
 }
 
 export function isAdmin(request: FastifyRequest, address: string): boolean {

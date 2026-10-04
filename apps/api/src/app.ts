@@ -5,6 +5,7 @@ import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import { getPrisma, type PrismaClient } from "@proven/db";
+import { chainFromConfig, type ChainAdapter } from "./chain/adapter";
 import { loadConfig, type Config } from "./config";
 import { problem, registerProblemHandlers } from "./problem";
 import { authRoutes } from "./routes/auth";
@@ -18,6 +19,8 @@ declare module "fastify" {
     config: Config;
     prisma: PrismaClient;
     authRateLimit: number;
+    /** null until contracts are configured (endpoints then answer 502 chain-unavailable). */
+    chain: ChainAdapter | null;
   }
 }
 
@@ -27,6 +30,8 @@ export interface BuildAppOptions {
   config?: Config;
   /** Defaults to the process-wide client. */
   prisma?: PrismaClient;
+  /** Defaults to an adapter built from config (or null when contracts are not configured). */
+  chain?: ChainAdapter | null;
   /** Requests per minute per IP: global and for the SIWE endpoints. */
   rateLimit?: { max?: number; authMax?: number };
 }
@@ -49,6 +54,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   app.decorate("config", config);
   app.decorate("prisma", prisma);
   app.decorate("authRateLimit", options.rateLimit?.authMax ?? 20);
+  app.decorate("chain", options.chain === undefined ? chainFromConfig(config, prisma) : options.chain);
   registerProblemHandlers(app);
 
   await app.register(helmet);

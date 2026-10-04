@@ -16,5 +16,10 @@
   "devDependencies": {
     "typescript": "5.4.5",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "canonicalize": "5.1.0",
+    "viem": "2.57.2",
+    "zod": "3.25.76"
   }
 }

@@ -7,8 +7,9 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 | W0 Fondasi Monorepo | ✅ selesai — CI hijau, preview Vercel jalan | `w0-monorepo-foundation` · PR #1 |
 | W1 Smart Contracts | ✅ selesai — CI hijau (deploy testnet menunggu langkah manual) | `w1-smart-contracts` · PR #2 |
 | W2 Auth & Database | ✅ selesai — CI hijau, login jalan di preview | `w2-auth-database` · PR #3 |
-| W3 Profil & Evidence | ✅ selesai — CI hijau, alur jalan di preview | `w3-profile-evidence` |
-| W4–W8 | ⏳ belum | — |
+| W3 Profil & Evidence | ✅ selesai — CI hijau, alur jalan di preview | `w3-profile-evidence` · PR #4 |
+| W4 Mesin Kredensial | ✅ selesai | `w4-credential-engine` |
+| W5–W8 | ⏳ belum | — |
 
 ---
 
@@ -109,3 +110,23 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 - Resource `proven-neon` (Neon Free, region Singapura `sin1`), env Sensitive `DATABASE_URL` + `DATABASE_URL_UNPOOLED` untuk Preview + Production. Vercel Functions dipindah ke `sin1` (D-022).
 - Redeploy preview W3: `prisma migrate deploy` menerapkan `20261004000000_init` di Neon.
 - Diuji langsung di preview Vercel (`vercel curl`): `/api/health` ok; login SIWE → `/api/me` `did:ethr:97:…`; pesan SIWE yang sama ditolak saat diulang; buat prestasi → upload PDF (SHA-256 = `shasum`) → tautkan → `EVIDENCE_ATTACHED` → download identik.
+
+---
+
+## W4 — Mesin Kredensial (2026-10-04)
+
+**Selesai — `packages/vc` (isomorphic, tanpa `node:*`; dijaga aturan ESLint)**
+- Schema Zod VC 2.0 + Open Badges (§S7.1), `didFromAddress`/`addressFromDid`, `buildAchievementVC`, `stripProof`, `jcs` (RFC 8785, paket `canonicalize`), `credentialHash` = SHA-256(JCS(vc tanpa proof)), `subjectRef` = SHA-256(DID).
+- EIP-712 §S7.3: `getTypedData`, `signCredential` (proof `DataIntegrityProof`, cryptosuite D-011), `verifyCredentialSignature` (`recoverTypedDataAddress`).
+- `verifyVC({vc, readAnchor, chainId, verifyingContract, expectedHash?})` → laporan `{schemaValid, hashMatches, anchorFound, subjectMatches, issuerMatches, signatureValid, revoked, expired, overall}` (D-024).
+- 19 test: golden vector `0x4933d97f…1a1f` (dicek silang dengan `node:crypto` atas JSON kanonik independen), urutan key di semua level → hash sama, 1 karakter berubah → hash beda, proof tidak memengaruhi hash, tanda tangan round-trip, key lain/chain lain → tidak valid, skenario verifyVC valid/revoked/expired/tampered/not_anchored.
+
+**Selesai — `apps/api/src/chain`**
+- Adapter viem: `isIssuerActive` (cache 60 detik), `getAnchor`, `isRevoked`, `anchorCredential` & `revokeCredential` idempotent, simulasi lalu kirim, nonce `pending`, `pg_advisory_xact_lock` per issuer (D-006), tunggu 1 konfirmasi (31337) / 2 (97), error → RFC 9457 (D-024). Config chain opsional (D-023).
+- Guard issuer & roles `/me` kini juga mewajibkan `IssuerRegistry.isActive` on-chain (fail-closed).
+- 7 test integrasi terhadap Anvil: VC → hash → anchor → `getAnchor` = hash & subjectRef off-chain; anchor ulang idempotent; 3 anchor paralel tanpa bentrok nonce; revoke → `isRevoked` true → `verifyVC` `revoked`; revert & RPC mati → problem. CI job utama kini menjalankan Anvil + deploy lokal (`REQUIRE_ANVIL=1`).
+
+**Selesai — web**: `/verify` memakai `@proven/vc` di browser untuk menghitung `credentialHash` dari VC JSON yang ditempel (bukti bundling isomorphic; verifikasi penuh di W7).
+
+**Tertunda**
+- Anchor nyata di BSC Testnet menunggu deploy kontrak (langkah manual W1) dan env `REGISTRY_ADDRESS`, `ISSUER_REGISTRY_ADDRESS`, `ISSUER_PRIVATE_KEY` di Vercel.

@@ -14,7 +14,9 @@
     "VERCEL_ENV",
     "VERCEL_URL",
     "VERCEL_BRANCH_URL",
-    "VERCEL_PROJECT_PRODUCTION_URL"
+    "VERCEL_PROJECT_PRODUCTION_URL",
+    "REQUIRE_ANVIL",
+    "ANVIL_RPC_URL"
   ],
   "tasks": {
     "build": {

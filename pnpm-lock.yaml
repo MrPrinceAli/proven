@@ -50,9 +50,15 @@ importers:
       '@fastify/rate-limit':
         specifier: 9.1.0
         version: 9.1.0
+      '@proven/contracts':
+        specifier: workspace:^
+        version: link:../../packages/contracts
       '@proven/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@proven/vc':
+        specifier: workspace:^
+        version: link:../../packages/vc
       fastify:
         specifier: 4.29.1
         version: 4.29.1
@@ -93,6 +99,9 @@ importers:
       '@proven/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@proven/vc':
+        specifier: workspace:^
+        version: link:../../packages/vc
       '@reown/appkit':
         specifier: 1.8.24
         version: 1.8.24(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.4.5)(use-sync-external-store@1.4.0(react@18.3.1))(utf-8-validate@5.0.10)(zod@4.6.5)
@@ -211,6 +220,16 @@ importers:
         version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(jiti@1.21.7)(tsx@4.23.15)
 
   packages/vc:
+    dependencies:
+      canonicalize:
+        specifier: 5.1.0
+        version: 5.1.0
+      viem:
+        specifier: 2.57.2
+        version: 2.57.2(bufferutil@4.1.0)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.25.76)
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
     devDependencies:
       typescript:
         specifier: 5.4.5
@@ -2125,6 +2144,11 @@ packages:
 
   caniuse-lite@1.0.30001814:
     resolution: {integrity: sha512-/Uaf1lAzr59XcMpW0o96WoEfr+VXK2OX4U9AgFoiSHsVJ4HppnIFUjtYzsyDH2+tgANaQb2/oxYGwCPapN1FpA==}
+
+  canonicalize@5.1.0:
+    resolution: {integrity: sha512-bab9+WefZljqQ8jT0qRwVmTyzAUU63K97QIQD3agynIBrb6sa5M2eAy8Hv8K3p4V9+ONVYZKtGYl4Dg+/5Gumw==}
+    engines: {node: '>=22'}
+    hasBin: true
 
   chai@5.3.3:
     resolution: {integrity: sha512-4zNhdJD/iOjSH0A05ea+Ke6MU5mmpQcbQsSOkgdaUMJ9zTlDTD/GYlwohmIE2u0gaxHYiVHEn1Fw9mZ/ktJWgw==}
@@ -5953,7 +5977,7 @@ snapshots:
 
   '@scure/bip32@1.7.0':
     dependencies:
-      '@noble/curves': 1.9.1
+      '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
 
@@ -7775,6 +7799,8 @@ snapshots:
   camelcase@5.3.1: {}
 
   caniuse-lite@1.0.30001814: {}
+
+  canonicalize@5.1.0: {}
 
   chai@5.3.3:
     dependencies:

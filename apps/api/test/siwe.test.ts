@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   TEST_CHAIN_ID,
+  fakeChain,
   hasDatabase,
   newAccount,
   requestNonce,
@@ -172,15 +173,19 @@ describe.skipIf(!hasDatabase)("SIWE auth (FR-01)", () => {
 describe.skipIf(!hasDatabase)("roles and guards", () => {
   let app: FastifyInstance;
   const admin = newAccount();
+  const activeIssuer = newAccount();
+  // Active on-chain but not verified in the DB: must still not be an issuer.
+  const unverifiedButActive = newAccount();
+  const activeIssuers = [activeIssuer.address, unverifiedButActive.address];
 
   beforeAll(async () => {
-    app = await testApp({ ADMIN_ADDRESSES: admin.address });
+    app = await testApp({ config: { ADMIN_ADDRESSES: admin.address }, chain: fakeChain(activeIssuers) });
   });
   afterAll(() => app.close());
   beforeEach(() => resetDatabase());
 
-  it("adds the issuer role for a verified issuer address", async () => {
-    const issuer = newAccount();
+  it("adds the issuer role for a DB-verified issuer that is active on-chain", async () => {
+    const issuer = activeIssuer;
     await testPrisma().issuer.create({
       data: {
         name: "XYZ Community",
@@ -194,8 +199,23 @@ describe.skipIf(!hasDatabase)("roles and guards", () => {
     expect(res.json().roles).toEqual(["user", "issuer"]);
   });
 
-  it("does not grant the issuer role to an unverified issuer", async () => {
+  it("does not grant the issuer role when the issuer is not active on-chain", async () => {
     const issuer = newAccount();
+    await testPrisma().issuer.create({
+      data: {
+        name: "Deactivated",
+        address: issuer.address,
+        did: `did:ethr:${TEST_CHAIN_ID}:${issuer.address.toLowerCase()}`,
+        verified: true,
+      },
+    });
+    const { response } = await signIn(app, issuer);
+    const res = await app.inject({ method: "GET", url: "/me", cookies: sessionCookie(response) });
+    expect(res.json().roles).toEqual(["user"]);
+  });
+
+  it("does not grant the issuer role to an issuer not verified in the DB", async () => {
+    const issuer = unverifiedButActive;
     await testPrisma().issuer.create({
       data: {
         name: "Pending",

@@ -29,7 +29,7 @@ describe("GET /health", () => {
 
 describe("rate limiting", () => {
   it("answers 429 problem+json once the SIWE limit is exceeded", async () => {
-    const app = await testApp({}, { max: 1000, authMax: 2 });
+    const app = await testApp({ rateLimit: { max: 1000, authMax: 2 } });
     const hit = () =>
       app.inject({ method: "POST", url: "/auth/siwe/nonce", payload: { address: "0x0", chainId: 97 } });
     await hit();

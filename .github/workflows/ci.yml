@@ -32,10 +32,22 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL_TEST: postgresql://proven:proven@localhost:5432/proven_test
+      # Chain integration tests (W4+) must run here, never be silently skipped.
+      REQUIRE_ANVIL: "1"
       NEXT_TELEMETRY_DISABLED: "1"
       TURBO_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+      - name: Start Anvil and deploy contracts
+        run: |
+          anvil --chain-id 31337 > anvil.log 2>&1 &
+          for i in $(seq 1 30); do cast chain-id --rpc-url http://127.0.0.1:8545 && break; sleep 1; done
+          bash packages/contracts/scripts/deploy-local.sh
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:

@@ -3,6 +3,7 @@ import { createSiweMessage } from "viem/siwe";
 import { generatePrivateKey, privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
 import { createPrismaClient, type PrismaClient } from "@proven/db";
 import { buildApp } from "../src/app";
+import type { ChainAdapter } from "../src/chain/adapter";
 import { loadConfig, type Config } from "../src/config";
 import { SESSION_COOKIE } from "../src/auth/session";
 
@@ -35,11 +36,37 @@ export function testPrisma(): PrismaClient {
   return sharedPrisma;
 }
 
-export async function testApp(
-  configOverrides: Record<string, string> = {},
+export interface TestAppOptions {
+  config?: Record<string, string>;
+  rateLimit?: { max?: number; authMax?: number };
+  /** Defaults to no chain (as before contracts are deployed). */
+  chain?: ChainAdapter | null;
+}
+
+export async function testApp({
+  config = {},
   rateLimit = { max: 10_000, authMax: 10_000 },
-): Promise<FastifyInstance> {
-  return buildApp({ config: testConfig(configOverrides), prisma: testPrisma(), rateLimit });
+  chain = null,
+}: TestAppOptions = {}): Promise<FastifyInstance> {
+  return buildApp({ config: testConfig(config), prisma: testPrisma(), rateLimit, chain });
+}
+
+/** In-memory ChainAdapter for API tests that must not touch a real chain. */
+export function fakeChain(activeIssuers: string[] = []): ChainAdapter {
+  const active = new Set(activeIssuers.map((a) => a.toLowerCase()));
+  const unavailable = async (): Promise<never> => {
+    throw new Error("fakeChain: not implemented");
+  };
+  return {
+    chainId: TEST_CHAIN_ID,
+    registryAddress: "0x0000000000000000000000000000000000000001",
+    issuerAccount: null,
+    isIssuerActive: async (address) => active.has(address.toLowerCase()),
+    getAnchor: async () => null,
+    isRevoked: async () => false,
+    anchorCredential: unavailable,
+    revokeCredential: unavailable,
+  };
 }
 
 /** Empties every table between tests (TRUNCATE does not fire the audit_logs row trigger). */

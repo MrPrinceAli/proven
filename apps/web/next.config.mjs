@@ -4,7 +4,7 @@ import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
 const nextConfig = {
   reactStrictMode: true,
   // Workspace packages ship TypeScript sources and are compiled by Next.
-  transpilePackages: ["@proven/api", "@proven/db", "@proven/ui"],
+  transpilePackages: ["@proven/api", "@proven/db", "@proven/ui", "@proven/vc"],
   webpack: (config, { isServer }) => {
     // Copies the Prisma query engine next to the server bundle in a pnpm monorepo (Vercel).
     if (isServer) config.plugins = [...config.plugins, new PrismaPlugin()];
