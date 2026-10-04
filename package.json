@@ -1,0 +1,30 @@
+{
+  "name": "proven",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:contracts": "echo \"TODO(W1): forge test\"",
+    "db:migrate": "echo \"TODO(W2): prisma migrate\"",
+    "db:seed": "echo \"TODO(W2): prisma seed\"",
+    "contracts:deploy:local": "echo \"TODO(W1): deploy to Anvil\""
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "7.18.0",
+    "@typescript-eslint/parser": "7.18.0",
+    "eslint": "8.57.1",
+    "eslint-config-prettier": "9.1.0",
+    "prettier": "^3.6.2",
+    "turbo": "2.11.7",
+    "typescript": "5.4.5"
+  }
+}
