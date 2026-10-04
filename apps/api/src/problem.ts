@@ -17,6 +17,7 @@ export type ProblemSlug =
   | "rate-limited"
   | "ai-output-invalid"
   | "chain-unavailable"
+  | "already-anchored"
   | "internal-error";
 
 const TITLES: Record<ProblemSlug, string> = {
@@ -32,6 +33,7 @@ const TITLES: Record<ProblemSlug, string> = {
   "rate-limited": "Too many requests",
   "ai-output-invalid": "AI output invalid",
   "chain-unavailable": "Chain unavailable",
+  "already-anchored": "Already anchored",
   "internal-error": "Internal server error",
 };
 

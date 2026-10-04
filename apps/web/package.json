@@ -16,6 +16,7 @@
     "@proven/api": "workspace:*",
     "@proven/db": "workspace:^",
     "@proven/ui": "workspace:*",
+    "@proven/vc": "workspace:^",
     "@reown/appkit": "1.8.24",
     "@reown/appkit-adapter-wagmi": "1.8.24",
     "@tanstack/react-query": "5.104.1",

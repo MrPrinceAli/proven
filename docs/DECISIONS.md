@@ -114,3 +114,13 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** Neon dibuat di Singapura (`sin1`), sedangkan Vercel Functions default di Washington (`iad1`); tiap query akan menyeberang benua.
 **Keputusan:** Project Vercel `serverlessFunctionRegion = sin1` (diatur lewat Vercel API). Neon: region `sin1`, env Sensitive untuk Preview + Production (tanpa Development, karena tidak ada runtime di laptop), branch DB per preview.
 **Konsekuensi:** Latensi API–DB rendah dan dekat dengan pengguna Indonesia.
+
+## D-023 — Konfigurasi chain opsional & peran issuer fail-closed (2026-10-04, W4)
+**Konteks:** Kontrak belum di-deploy ke BSC Testnet (butuh tBNB), padahal config API gagal-cepat; mewajibkan `REGISTRY_ADDRESS` dkk. akan mematikan seluruh API di Vercel.
+**Keputusan:** `ISSUER_PRIVATE_KEY`, `REGISTRY_ADDRESS`, `ISSUER_REGISTRY_ADDRESS`, `CREDENTIAL_SBT_ADDRESS` opsional tetapi divalidasi formatnya bila diisi. Tanpa alamat kontrak, `app.chain = null` dan endpoint yang butuh chain menjawab 502 `chain-unavailable`. Peran issuer (guard & `/me`) = baris `issuers.verified` **dan** `IssuerRegistry.isActive` on-chain; tanpa chain atau saat RPC error hasilnya bukan issuer (fail-closed).
+**Konsekuensi:** Profil/evidence tetap jalan sebelum deploy testnet; status issuer selalu tunduk pada registry on-chain.
+
+## D-024 — Rincian chain adapter & verifyVC (2026-10-04, W4)
+**Konteks:** Spesifikasi meminta anchor idempotent yang mengembalikan data tx lama, dan `verifyVC` yang membedakan `tampered` dari `not_anchored`.
+**Keputusan:** Anchor/revoke: cek `getAnchor` → jika sudah ada dari issuer yang sama, cari tx lewat event `CredentialIssued/CredentialRevoked` (scan mundur per 5.000 blok, maks 200.000 blok) tanpa tx baru; issuer/subject lain → 409 `already-anchored`. Simulasi kontrak sebelum kirim agar revert terpetakan (EXISTS 409, NOT_ACTIVE_ISSUER/NOT_ISSUER 403, NOT_FOUND 404, lain-lain 502). `verifyVC`: skema invalid atau hash ≠ `expectedHash` → `tampered`; anchor tidak ada → `tampered` bila ada proof yang gagal diverifikasi, selain itu `not_anchored`; subject/issuer/tanda tangan tidak cocok → `tampered`; lalu `revoked`, `expired`, `valid`. `credentialHash()` selalu membuang `proof`.
+**Konsekuensi:** VC yang diubah satu karakter terdeteksi `tampered` walau tanpa catatan server, karena tanda tangan EIP-712 tidak lagi cocok.
