@@ -8,6 +8,7 @@ import {
   IconDownload,
   IconFile,
   IconLink,
+  IconSparkles,
   IconTrash,
   IconX,
   StatusBadge,
@@ -18,6 +19,7 @@ import { ApiError } from "@/lib/api";
 import { EVIDENCE_TYPES, KIND_BY_TYPE, KINDS, formatBytes, type Claim, type EntityType } from "@/lib/claims";
 import { publicEnv } from "@/lib/env";
 import {
+  useClassifyEvidence,
   useDeleteEvidence,
   useLinkEvidence,
   useUpdateEvidence,
@@ -38,6 +40,8 @@ export function EvidenceCard({
   const update = useUpdateEvidence();
   const remove = useDeleteEvidence();
   const link = useLinkEvidence();
+  const classify = useClassifyEvidence();
+  const typeLabel = (t: string) => EVIDENCE_TYPES.find((x) => x.value === t)?.label ?? t;
   const [target, setTarget] = useState("");
 
   const allClaims: (Claim & { label: string })[] = claims
@@ -157,6 +161,35 @@ export function EvidenceCard({
             ))}
           </select>
         </label>
+        <button
+          type="button"
+          onClick={() => void run(() => classify.mutateAsync(evidence.id), "Saran klasifikasi AI diterima")}
+          disabled={classify.isPending}
+          className="inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-xs text-ink hover:bg-gray-50 disabled:opacity-50"
+        >
+          <IconSparkles className="h-3.5 w-3.5 text-brand-700" />
+          {classify.isPending ? "Mengklasifikasikan…" : "Klasifikasikan (AI)"}
+        </button>
+        {evidence.aiType && (
+          <span className="inline-flex flex-wrap items-center gap-1 text-xs text-amber-900">
+            Saran AI: {typeLabel(evidence.aiType)}
+            {evidence.aiConfidence !== null && ` (${Math.round(evidence.aiConfidence * 100)}%)`}
+            {evidence.aiType !== evidence.type && (
+              <button
+                type="button"
+                onClick={() =>
+                  void run(
+                    () => update.mutateAsync({ id: evidence.id, patch: { type: evidence.aiType! } }),
+                    "Jenis bukti diperbarui sesuai saran AI",
+                  )
+                }
+                className="font-semibold text-brand-700 hover:underline"
+              >
+                Terapkan
+              </button>
+            )}
+          </span>
+        )}
       </div>
 
       <div className="mt-3 border-t border-line pt-3">

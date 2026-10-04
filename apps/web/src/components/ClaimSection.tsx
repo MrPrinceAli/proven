@@ -33,15 +33,23 @@ export const KIND_ICONS: Record<ClaimPath, ComponentType<{ className?: string }>
 
 type Item = Record<string, unknown> & { id: string; status: string };
 
+export interface ClaimCheckHint {
+  status: string;
+  reason: string;
+}
+
 /** One profile section. Pass `editable` for the owner's view; public profiles are read-only. */
 export function ClaimSection({
   kind,
   items,
   editable = false,
+  checks,
 }: {
   kind: KindDef;
   items: Item[];
   editable?: boolean;
+  /** AI claim-check hints keyed by "{entityType}:{id}" (suggestions only). */
+  checks?: Record<string, ClaimCheckHint>;
 }) {
   const Icon = KIND_ICONS[kind.path];
   const [editing, setEditing] = useState<Item | "new" | null>(null);
@@ -106,6 +114,13 @@ export function ClaimSection({
                     <IconPaperclip className="h-3.5 w-3.5" />
                     {evidenceCount > 0 ? `${evidenceCount} bukti terlampir` : "Belum ada bukti"}
                   </p>
+                  {checks?.[`${kind.entityType}:${item.id}`] && (
+                    <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted">
+                      <span className="font-medium text-amber-900">Cek AI:</span>
+                      <StatusBadge status={checks[`${kind.entityType}:${item.id}`]!.status} />
+                      {checks[`${kind.entityType}:${item.id}`]!.reason}
+                    </p>
+                  )}
                   {editable && item.status === "EVIDENCE_ATTACHED" && (
                     <button
                       type="button"

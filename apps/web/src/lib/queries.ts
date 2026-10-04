@@ -19,6 +19,8 @@ export interface Evidence {
   mimeType: string | null;
   sizeBytes: number | null;
   sha256: string;
+  aiType: string | null;
+  aiConfidence: number | null;
   capturedAt: string;
   links: { entityType: EntityType; entityId: string }[];
   custody: { event: string; at: string; by: string; sha256: string }[];
@@ -284,5 +286,82 @@ export function useRevokeCredential() {
         body: JSON.stringify({ reason }),
       }),
     onSuccess: refresh,
+  });
+}
+
+// ----- W6: AI (always a draft or suggestion; the user decides) -----
+
+export interface AiEnvelope<T> {
+  aiGenerated: true;
+  promptVersion: string;
+  model: string;
+  result: T;
+  removed: string[];
+}
+export interface AiSummary {
+  headline: string;
+  summary: string;
+  citations: string[];
+  grounded: boolean;
+}
+export interface AiCv {
+  sections: { title: string; items: { text: string; citations: string[] }[] }[];
+}
+export interface AiTailor {
+  matched: { skill: string; evidenceId: string }[];
+  gaps: { skill: string; note: string }[];
+  cv: string;
+}
+export interface AiClaimCheck {
+  claims: {
+    claimId: string;
+    claim: string;
+    status: string;
+    evidenceIds: string[];
+    confidence: number;
+    reason: string;
+  }[];
+}
+
+const post = <T>(path: string, body: unknown) => api<T>(path, { method: "POST", body: JSON.stringify(body) });
+
+export function useAiSummary() {
+  return useMutation({
+    mutationFn: (freeText?: string) =>
+      post<AiEnvelope<AiSummary>>("/ai/summary", freeText ? { freeText } : {}),
+  });
+}
+
+export function useAiCv() {
+  return useMutation({
+    mutationFn: (jobDescription?: string) =>
+      post<(AiEnvelope<AiCv> & { mode: "cv" }) | (AiEnvelope<AiTailor> & { mode: "tailor" })>(
+        "/ai/cv",
+        jobDescription ? { jobDescription } : {},
+      ),
+  });
+}
+
+export function useClassifyEvidence() {
+  const refresh = useRefresh();
+  return useMutation({
+    mutationFn: (evidenceId: string) =>
+      post<AiEnvelope<{ type: string; confidence: number; rationale: string }>>("/ai/classify-evidence", {
+        evidenceId,
+      }),
+    onSuccess: refresh,
+  });
+}
+
+export function useClaimCheck() {
+  return useMutation({ mutationFn: () => post<AiEnvelope<AiClaimCheck>>("/ai/claim-check", {}) });
+}
+
+export function useIssuerClaimCheck() {
+  return useMutation({
+    mutationFn: (requestId: string) =>
+      api<AiEnvelope<AiClaimCheck> & { note: string }>(
+        `/issuer/verification-requests/${requestId}/claim-check`,
+      ),
   });
 }

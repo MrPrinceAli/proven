@@ -4,6 +4,7 @@ import { generatePrivateKey, privateKeyToAccount, type PrivateKeyAccount } from 
 import { createPrismaClient, type PrismaClient } from "@proven/db";
 import { buildApp } from "../src/app";
 import type { ChainAdapter } from "../src/chain/adapter";
+import type { LlmClient } from "@proven/ai";
 import { loadConfig, type Config } from "../src/config";
 import { SESSION_COOKIE } from "../src/auth/session";
 
@@ -38,17 +39,20 @@ export function testPrisma(): PrismaClient {
 
 export interface TestAppOptions {
   config?: Record<string, string>;
-  rateLimit?: { max?: number; authMax?: number };
+  rateLimit?: { max?: number; authMax?: number; aiMax?: number };
   /** Defaults to no chain (as before contracts are deployed). */
   chain?: ChainAdapter | null;
+  /** Defaults to the mock LLM from config (LLM_PROVIDER=mock). */
+  llm?: LlmClient;
 }
 
 export async function testApp({
   config = {},
-  rateLimit = { max: 10_000, authMax: 10_000 },
+  rateLimit = { max: 10_000, authMax: 10_000, aiMax: 10_000 },
   chain = null,
+  llm,
 }: TestAppOptions = {}): Promise<FastifyInstance> {
-  return buildApp({ config: testConfig(config), prisma: testPrisma(), rateLimit, chain });
+  return buildApp({ config: testConfig(config), prisma: testPrisma(), rateLimit, chain, llm });
 }
 
 /** In-memory ChainAdapter for API tests that must not touch a real chain. */

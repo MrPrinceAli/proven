@@ -15,6 +15,7 @@ import {
   useToast,
 } from "@proven/ui";
 import { useState } from "react";
+import { AiLabel } from "@/components/AiLabel";
 import { CredentialCard } from "@/components/CredentialCard";
 import { ApiError } from "@/lib/api";
 import { shortDid } from "@/lib/chains";
@@ -22,6 +23,7 @@ import { formatBytes, KIND_BY_TYPE } from "@/lib/claims";
 import { shortHash, txUrl } from "@/lib/explorer";
 import {
   useDecideRequest,
+  useIssuerClaimCheck,
   useIssuerCredentials,
   useIssuerQueue,
   useIssuerRequest,
@@ -138,6 +140,7 @@ function Queue() {
 function RequestPanel({ id, onDone }: { id: string; onDone: () => void }) {
   const { data, isLoading } = useIssuerRequest(id);
   const decide = useDecideRequest();
+  const aiCheck = useIssuerClaimCheck();
   const toast = useToast();
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
@@ -238,9 +241,29 @@ function RequestPanel({ id, onDone }: { id: string; onDone: () => void }) {
         <h3 className="flex items-center gap-1 text-sm font-semibold">
           <IconSparkles className="h-4 w-4 text-brand-700" /> Analisis AI
         </h3>
-        <p className="mt-1 text-sm text-muted">
-          Tersedia di gelombang W6. AI hanya asisten. Keputusan ada di tangan issuer.
-        </p>
+        <p className="mt-1 text-sm text-muted">AI hanya asisten. Keputusan ada di tangan issuer.</p>
+        {aiCheck.data ? (
+          <div className="mt-2 flex flex-col gap-2">
+            <AiLabel model={aiCheck.data.model} />
+            {aiCheck.data.result.claims.map((c) => (
+              <div key={c.claimId} className="text-sm">
+                <StatusBadge status={c.status} /> <span className="text-muted">{c.reason}</span>
+                <span className="ml-1 text-xs text-muted">· keyakinan {Math.round(c.confidence * 100)}%</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            className="mt-2 px-0"
+            onClick={() =>
+              aiCheck.mutateAsync(id).catch((e) => setError(e instanceof ApiError ? e.message : "Gagal"))
+            }
+            disabled={aiCheck.isPending}
+          >
+            {aiCheck.isPending ? "Menganalisis…" : "Minta saran AI"}
+          </Button>
+        )}
       </section>
 
       {error && (

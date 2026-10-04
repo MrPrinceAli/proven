@@ -4,11 +4,13 @@ import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
+import { createLlmClient, type LlmClient } from "@proven/ai";
 import { getPrisma, type PrismaClient } from "@proven/db";
 import { chainFromConfig, type ChainAdapter } from "./chain/adapter";
 import { bootstrapIssuer } from "./issuers/register";
 import { loadConfig, type Config } from "./config";
 import { problem, registerProblemHandlers } from "./problem";
+import { aiRoutes } from "./routes/ai";
 import { authRoutes } from "./routes/auth";
 import { claimRoutes } from "./routes/claims";
 import { evidenceRoutes, MAX_EVIDENCE_BYTES } from "./routes/evidence";
@@ -34,8 +36,10 @@ export interface BuildAppOptions {
   prisma?: PrismaClient;
   /** Defaults to an adapter built from config (or null when contracts are not configured). */
   chain?: ChainAdapter | null;
-  /** Requests per minute per IP: global and for the SIWE endpoints. */
-  rateLimit?: { max?: number; authMax?: number };
+  /** Defaults to the client configured by LLM_PROVIDER (mock unless set to anthropic). */
+  llm?: LlmClient;
+  /** Requests per minute: global and SIWE per IP, AI per user. */
+  rateLimit?: { max?: number; authMax?: number; aiMax?: number };
 }
 
 /**
@@ -56,6 +60,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   app.decorate("config", config);
   app.decorate("prisma", prisma);
   app.decorate("authRateLimit", options.rateLimit?.authMax ?? 20);
+  app.decorate("aiRateLimit", options.rateLimit?.aiMax ?? 10);
+  app.decorate("llm", options.llm ?? createLlmClient(config.llm));
   app.decorate("chain", options.chain === undefined ? chainFromConfig(config, prisma) : options.chain);
   registerProblemHandlers(app);
   if (config.issuer) await bootstrapIssuer(prisma, config.issuer);
@@ -82,6 +88,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(evidenceRoutes);
   await app.register(publicRoutes);
   await app.register(verificationRoutes);
+  await app.register(aiRoutes);
 
   return app;
 }
