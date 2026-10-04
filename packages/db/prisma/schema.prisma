@@ -322,6 +322,8 @@ model Session {
   userId    String   @map("user_id") @db.Uuid
   tokenHash Bytes    @unique @map("token_hash") // sha256(cookie token)
   address   String
+  /// "siwe" (wallet signature) or "demo" (demo mode, D-032).
+  via       String   @default("siwe")
   expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 

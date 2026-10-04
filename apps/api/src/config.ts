@@ -63,6 +63,11 @@ const EnvSchema = z.object({
   REGISTRY_ADDRESS: optionalAddress,
   ISSUER_REGISTRY_ADDRESS: optionalAddress,
   CREDENTIAL_SBT_ADDRESS: optionalAddress,
+  // Demo mode (D-032): wallet-free sandbox logins for judges. Testnet only.
+  DEMO_MODE: z
+    .string()
+    .optional()
+    .transform((v) => v === "1" || v?.toLowerCase() === "true"),
   // AI (W6). "mock" needs no key and is used in dev, tests and CI.
   LLM_PROVIDER: z.enum(["mock", "anthropic"]).default("mock"),
   LLM_API_KEY: z
@@ -100,6 +105,8 @@ export interface Config {
   issuerRegistryAddress?: `0x${string}`;
   credentialSbtAddress?: `0x${string}`;
   llm: { provider: "mock" | "anthropic"; apiKey?: string; model: string; timeoutMs: number };
+  /** Wallet-free demo logins (D-032); never on a mainnet. */
+  demoMode: boolean;
   /** Hosts a SIWE message may name as its `domain` (D-007). */
   allowedDomains: string[];
   /** Origins a SIWE message may name as its `uri`. */
@@ -134,6 +141,13 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   ) {
     throw new Error("Invalid environment: ISSUER_PRIVATE_KEY does not belong to ISSUER_ADDRESS");
   }
+  if (e.LLM_PROVIDER === "anthropic" && !e.LLM_API_KEY) {
+    throw new Error("Invalid environment: LLM_API_KEY is required when LLM_PROVIDER=anthropic");
+  }
+  // Demo logins skip the wallet signature, so they must never run against a mainnet (D-032).
+  if (e.DEMO_MODE && [1, 10, 56, 137, 8453, 42161].includes(e.CHAIN_ID)) {
+    throw new Error("Invalid environment: DEMO_MODE is only allowed on test networks");
+  }
 
   const allowedDomains = [
     ...new Set(
@@ -163,6 +177,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     registryAddress: e.REGISTRY_ADDRESS,
     issuerRegistryAddress: e.ISSUER_REGISTRY_ADDRESS,
     credentialSbtAddress: e.CREDENTIAL_SBT_ADDRESS,
+    demoMode: e.DEMO_MODE,
     llm: { provider: e.LLM_PROVIDER, apiKey: e.LLM_API_KEY, model: e.LLM_MODEL, timeoutMs: e.LLM_TIMEOUT_MS },
     allowedDomains,
     allowedOrigins,

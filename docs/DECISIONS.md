@@ -159,3 +159,8 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** `ops → db-seed` butuh `DATABASE_URL` dan `EVIDENCE_ENC_KEY` produksi di GitHub Secrets, tetapi keduanya tersimpan Sensitive di Vercel (tidak bisa dibaca), sehingga harus dibuat ulang dan disalin ke dua tempat.
 **Keputusan:** Tambah `POST /admin/seed-demo {demoUserAddress}` (wajib admin: address sesi ∈ `ADMIN_ADDRESSES`) yang menjalankan `seedDemo` di dalam deployment memakai env-nya sendiri. `ADMIN_ADDRESSES` produksi = address issuer. Task `ops → db-seed` tetap ada untuk lingkungan lain.
 **Konsekuensi:** Tidak ada rahasia yang disalin; seed dipanggil dengan sesi SIWE admin.
+
+## D-032 — Mode demo tanpa wallet untuk juri (2026-10-04)
+**Konteks:** Juri hackathon perlu menjelajahi semua fitur, termasuk peran issuer, tanpa menyiapkan wallet atau memegang kunci issuer.
+**Keputusan:** `DEMO_MODE=1` (ditolak config di mainnet) membuka `POST /auth/demo {role}`: "user" membuat **sandbox** baru per pengunjung (alamat acak tanpa kunci, `users.auth_provider = "demo"`, diisi `seedDemo` dengan slug `demo-xxxxxx`) atau melanjutkan sandbox milik browser itu; "issuer" masuk sebagai issuer relay. Sesi ditandai `sessions.via = "demo"`. Issuer demo hanya melihat dan memproses permintaan/kredensial milik akun demo — profil pajangan dan wallet sungguhan tidak tersentuh (`assertDemoScope`). Persetujuan issuer demo tetap transaksi nyata di testnet. `GET /config` memberi tahu UI; banner "Mode demo" + tombol ganti peran.
+**Konsekuensi:** Aturan emas #3 tetap berlaku untuk akun nyata: status VERIFIED pada wallet sungguhan hanya bisa diberikan issuer yang login dengan wallet issuer. Mode demo dimatikan dengan menghapus `DEMO_MODE`.

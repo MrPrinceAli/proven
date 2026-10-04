@@ -29,6 +29,9 @@ export async function meRoutes(app: FastifyInstance) {
           }
         : null,
       roles,
+      // Demo-mode session (D-032): the UI shows a banner and role switcher.
+      demo: request.auth!.via === "demo",
+      sandbox: user.authProvider === "demo",
     };
   });
 }

@@ -14,6 +14,10 @@ export interface Me {
     updatedAt: string;
   } | null;
   roles: string[];
+  /** Logged in through demo mode (D-032). */
+  demo?: boolean;
+  /** A wallet-less sandbox account created by demo mode. */
+  sandbox?: boolean;
 }
 
 export const sessionKey = ["me"] as const;

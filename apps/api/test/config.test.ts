@@ -70,3 +70,14 @@ describe("issuer identity (D-025)", () => {
     ).toBe(anvil1Key);
   });
 });
+
+describe("LLM provider", () => {
+  it("requires LLM_API_KEY for the anthropic provider and defaults the model", () => {
+    expect(() => testConfig({ LLM_PROVIDER: "anthropic" })).toThrow(/LLM_API_KEY/);
+    expect(testConfig({ LLM_PROVIDER: "anthropic", LLM_API_KEY: "sk-test" }).llm).toMatchObject({
+      provider: "anthropic",
+      model: "claude-opus-5-5",
+      timeoutMs: 10_000,
+    });
+  });
+});
