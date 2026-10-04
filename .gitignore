@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.*
+!.env.example
+.vercel
+.next
+dist
+coverage
+.DS_Store
+packages/contracts/out
+packages/contracts/cache
+packages/contracts/broadcast
+packages/contracts/deployments/31337.json
