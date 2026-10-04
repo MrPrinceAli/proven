@@ -72,7 +72,13 @@ export async function issueCredential(slug: string) {
   const user = await login();
   await user.call(
     "/me/profile",
-    { slug, headline: "Smart Contract Engineer", visibility: "public" },
+    {
+      slug,
+      displayName: "Nadia Putri",
+      avatarSeed: "pv-3",
+      headline: "Smart Contract Engineer",
+      visibility: "public",
+    },
     "PATCH",
   );
   const achievement = (

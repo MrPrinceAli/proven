@@ -178,7 +178,13 @@ export interface QueueItem {
   entityType: EntityType;
   entityId: string;
   claim: { label: string; status: string | null; [field: string]: unknown };
-  requester: { did: string | null; slug: string | null; headline: string };
+  requester: {
+    did: string | null;
+    slug: string | null;
+    headline: string;
+    displayName: string;
+    avatarSeed: string | null;
+  };
   state: "pending" | "approved" | "rejected";
   createdAt: string;
   decidedAt: string | null;

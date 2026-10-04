@@ -1,4 +1,5 @@
 import { IconCheckBadge, IconLock, IconSparkles } from "@proven/ui";
+import { avatarUri } from "@/lib/avatar";
 import { site } from "@/lib/site";
 
 /**
@@ -26,12 +27,14 @@ export function CredentialMock() {
           </div>
 
           <div className="mt-5 flex items-center gap-4">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-300 to-teal-600 text-lg font-bold text-brand-950 ring-4 ring-white/10">
-              {site.showcaseName
-                .split(" ")
-                .map((w) => w[0])
-                .join("")}
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={avatarUri(site.showcaseAvatarSeed)}
+              alt=""
+              width={56}
+              height={56}
+              className="h-14 w-14 shrink-0 rounded-2xl bg-emerald-100 ring-4 ring-white/10"
+            />
             <div className="min-w-0">
               <p className="truncate text-lg font-semibold text-white">{site.showcaseName}</p>
               <p className="truncate text-sm text-white/60">Smart Contract Engineer · BNB Chain</p>

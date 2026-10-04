@@ -12,6 +12,8 @@ import { StatusLegend } from "./StatusLegend";
 
 export interface PublicProfile {
   slug: string;
+  displayName: string;
+  avatarSeed: string | null;
   headline: string;
   summary: string;
   did: string | null;
@@ -33,10 +35,11 @@ export function PublicProfileView({ profile }: { profile: PublicProfile }) {
     <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr),300px]">
       <main className="flex min-w-0 flex-col gap-4">
         <ProfileHeader
+          name={profile.displayName}
           slug={profile.slug}
           headline={profile.headline}
           did={profile.did}
-          seed={profile.slug}
+          avatarSeed={profile.avatarSeed}
         />
         {profile.summary && (
           <SectionCard title="Tentang">
@@ -82,7 +85,7 @@ export function PublicProfileView({ profile }: { profile: PublicProfile }) {
       </main>
       <aside className="flex flex-col gap-4">
         <Card className="flex flex-col items-center gap-3 p-4 text-center">
-          <Qr value={path} label={`profil publik @${profile.slug}`} size={160} />
+          <Qr value={path} label={`profil publik ${profile.displayName || `@${profile.slug}`}`} size={160} />
           <p className="text-sm text-muted">Pindai atau bagikan profil ini</p>
           <CopyLinkButton path={path} label="Salin tautan profil" />
         </Card>

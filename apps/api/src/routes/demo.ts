@@ -5,6 +5,7 @@ import { audit } from "../audit";
 import { createSession, setSessionCookie } from "../auth/session";
 import { problem } from "../problem";
 import { seedDemo } from "../seed/demo";
+import { PERSONAS, personaSlug } from "../seed/personas";
 import { didFor } from "./auth";
 
 const DemoBody = z
@@ -26,7 +27,7 @@ export async function assertDemoScope(request: FastifyRequest, subjectUserId: st
 
 /**
  * Demo mode (D-032): judges explore Proven without a wallet. "user" gets a fresh sandbox seeded with
- * example data (or resumes theirs); "issuer" acts as the relay issuer, whose approvals are real
+ * example data under a fictional persona (or resumes theirs); "issuer" acts as the relay issuer, whose approvals are real
  * transactions on the test network, limited to demo sandboxes.
  */
 export async function demoRoutes(app: FastifyInstance) {
@@ -76,13 +77,15 @@ export async function demoRoutes(app: FastifyInstance) {
         } else {
           // A throwaway address: nobody holds its key, so it can only be used through demo mode.
           address = privateKeyToAccount(generatePrivateKey()).address;
+          const persona = PERSONAS[Math.floor(Math.random() * PERSONAS.length)]!;
           const seeded = await seedDemo({
             prisma,
             chainId: config.chainId,
             evidenceKey: config.evidenceKey,
             issuer: config.issuer,
             demoAddress: address,
-            slug: `demo-${address.slice(2, 8).toLowerCase()}`,
+            persona,
+            slug: personaSlug(persona, address.slice(2, 6)),
             authProvider: "demo",
           });
           userId = seeded.userId;

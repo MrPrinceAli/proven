@@ -3,6 +3,10 @@ import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // The showcase profile moved to a named persona (D-034); keep old shared links working.
+  async redirects() {
+    return [{ source: "/p/rina-demo", destination: "/p/arya-pratama", permanent: true }];
+  },
   // Workspace packages ship TypeScript sources and are compiled by Next.
   transpilePackages: ["@proven/api", "@proven/contracts", "@proven/db", "@proven/ui", "@proven/vc"],
   webpack: (config, { isServer }) => {

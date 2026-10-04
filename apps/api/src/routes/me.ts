@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { isAdmin, isIssuer, requireUser } from "../auth/guards";
+import { profileIdentity } from "../identity";
 import { problem } from "../problem";
 
 export async function meRoutes(app: FastifyInstance) {
@@ -21,6 +22,7 @@ export async function meRoutes(app: FastifyInstance) {
       wallet: wallet ? { address: wallet.address, chainId: wallet.chainId, did: wallet.did } : null,
       profile: user.profile
         ? {
+            ...profileIdentity(user.profile),
             headline: user.profile.headline,
             summary: user.profile.summary,
             visibility: user.profile.visibility,

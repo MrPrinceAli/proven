@@ -56,7 +56,10 @@ describe.skipIf(!hasDatabase)("demo mode (D-032)", () => {
     const { userId } = first.json();
     const me = (await app.inject({ method: "GET", url: "/me", cookies: cookieOf(first) })).json();
     expect(me).toMatchObject({ demo: true, sandbox: true, roles: ["user"] });
-    expect(me.profile.slug).toMatch(/^demo-[0-9a-f]{6}$/);
+    // A fictional persona with a matching illustrated avatar (D-034).
+    expect(me.profile.slug).toMatch(/^[a-z]+-[a-z]+-[0-9a-f]{4}$/);
+    expect(me.profile.displayName).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
+    expect(me.profile.avatarSeed).toMatch(/^pv-\d+$/);
 
     const claims = (await app.inject({ method: "GET", url: "/me/claims", cookies: cookieOf(first) })).json();
     expect(claims.summary.PENDING_ISSUER).toBe(1);

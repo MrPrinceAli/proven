@@ -11,7 +11,7 @@ const load = (slug: string) => serverApi<PublicProfile>(`/p/${encodeURIComponent
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const { body } = await load(params.slug);
   if (!body) return { title: "Profil tidak ditemukan" };
-  const title = `@${body.slug}${body.headline ? ` — ${body.headline}` : ""}`;
+  const title = `${body.displayName || `@${body.slug}`}${body.headline ? ` — ${body.headline}` : ""}`;
   const verified = body.credentials.filter((c) => c.status === "active").length;
   const description =
     body.summary.slice(0, 160) ||

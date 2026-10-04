@@ -16,6 +16,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useLogout, useSession } from "@/lib/session";
 import { DemoBanner } from "./DemoBanner";
+import { avatarUri } from "@/lib/avatar";
 import { avatarLabel } from "./identity";
 import { ProfileMiniCard } from "./ProfileMiniCard";
 import { StatusLegend } from "./StatusLegend";
@@ -87,8 +88,9 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
           <div className="ml-auto flex items-center gap-1 md:ml-2">
             {me?.wallet && (
               <Avatar
-                seed={me.profile?.slug ?? me.wallet.address}
-                label={avatarLabel(me.profile?.slug, me.wallet.did)}
+                seed={me.profile?.avatarSeed ?? me.wallet.address}
+                label={avatarLabel(me.profile?.displayName, me.profile?.slug, me.wallet.did)}
+                src={me.profile?.avatarSeed ? avatarUri(me.profile.avatarSeed) : undefined}
                 size={32}
               />
             )}

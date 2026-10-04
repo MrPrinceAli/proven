@@ -49,6 +49,8 @@ describe.skipIf(!hasDatabase)("GET /p/:slug (FR-14)", () => {
     const body = res.json();
     expect(body).toMatchObject({
       slug: "rina",
+      displayName: "",
+      avatarSeed: expect.any(String),
       headline: "Smart Contract Engineer",
       did: `did:ethr:97:${account.address.toLowerCase().slice(0, 6)}…${account.address.toLowerCase().slice(-4)}`,
     });

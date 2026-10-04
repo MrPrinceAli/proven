@@ -57,13 +57,17 @@ model Wallet {
 // ===== PROFIL =====
 
 model Profile {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String   @unique @map("user_id") @db.Uuid
-  headline   String   @default("")
-  summary    String   @default("")
-  visibility String   @default("public") // public | private | recruiter-only
-  slug       String?  @unique @db.Citext
-  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  /// Name shown on the profile (off-chain only, D-034).
+  displayName String   @default("") @map("display_name")
+  /// Seed for the illustrated avatar; null = derived from the profile id.
+  avatarSeed  String?  @map("avatar_seed")
+  headline    String   @default("")
+  summary     String   @default("")
+  visibility  String   @default("public") // public | private | recruiter-only
+  slug        String?  @unique @db.Citext
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

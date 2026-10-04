@@ -6,7 +6,15 @@ import type { Me } from "./session";
 const me: Me = {
   user: { id: "u", status: "active", createdAt: "" },
   wallet: { address: "0x1", chainId: 97, did: "did:ethr:97:0x1" },
-  profile: { headline: "Engineer", summary: "Halo", visibility: "public", slug: "rina", updatedAt: "" },
+  profile: {
+    displayName: "",
+    avatarSeed: "pv-1",
+    headline: "Engineer",
+    summary: "Halo",
+    visibility: "public",
+    slug: "rina",
+    updatedAt: "",
+  },
   roles: ["user"],
 };
 const claims = {

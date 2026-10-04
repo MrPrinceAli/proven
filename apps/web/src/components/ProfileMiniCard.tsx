@@ -2,6 +2,7 @@
 
 import { Avatar, Card } from "@proven/ui";
 import Link from "next/link";
+import { avatarUri } from "@/lib/avatar";
 import { shortDid } from "@/lib/chains";
 import { useClaims } from "@/lib/queries";
 import { useSession } from "@/lib/session";
@@ -20,12 +21,13 @@ export function ProfileMiniCard() {
       <div className="h-14 bg-gradient-to-r from-brand-700 to-brand-900" />
       <div className="-mt-7 flex flex-col items-center px-4 pb-4 text-center">
         <Avatar
-          seed={me.profile?.slug ?? me.wallet.address}
-          label={avatarLabel(me.profile?.slug, me.wallet.did)}
+          seed={me.profile?.avatarSeed ?? me.wallet.address}
+          label={avatarLabel(me.profile?.displayName, me.profile?.slug, me.wallet.did)}
+          src={me.profile?.avatarSeed ? avatarUri(me.profile.avatarSeed) : undefined}
           size={56}
         />
         <Link href="/dashboard/profile" className="mt-2 font-semibold text-ink hover:underline">
-          {displayName(me.profile?.slug, me.wallet.did)}
+          {displayName(me.profile?.displayName, me.profile?.slug, me.wallet.did)}
         </Link>
         <p className="mt-1 text-xs text-muted">{me.profile?.headline || "Tambahkan headline di profil"}</p>
         <p className="mt-2 font-mono text-[11px] text-gray-500" title={me.wallet.did}>

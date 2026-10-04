@@ -68,7 +68,30 @@ export function EmptyState({
 }
 
 /** Deterministic initials avatar; `seed` (e.g. an address) picks one of several green shades. */
-export function Avatar({ seed, label, size = 48 }: { seed: string; label: string; size?: number }) {
+export function Avatar({
+  seed,
+  label,
+  size = 48,
+  src,
+}: {
+  seed: string;
+  label: string;
+  size?: number;
+  /** Image (e.g. an illustrated avatar data URI); initials on a brand shade otherwise. */
+  src?: string;
+}) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={label}
+        width={size}
+        height={size}
+        className="inline-block shrink-0 rounded-full bg-brand-50 ring-4 ring-white"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   const shades = ["bg-brand-700", "bg-brand-800", "bg-brand-900", "bg-emerald-600", "bg-teal-700"];
   let hash = 0;
   for (const ch of seed) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;

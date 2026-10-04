@@ -4,6 +4,7 @@ export const site = {
   description:
     "Identitas profesional terverifikasi: klaim, bukti, dan kredensial yang bisa dicek siapa saja.",
   /** Public showcase profile seeded for judges (D-031). */
-  showcaseSlug: "rina-demo",
+  showcaseSlug: "arya-pratama",
   showcaseName: "Arya Pratama",
+  showcaseAvatarSeed: "pv-0",
 } as const;

@@ -27,10 +27,11 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col gap-4">
       <ProfileHeader
+        name={me.profile.displayName}
         slug={me.profile.slug}
         headline={me.profile.headline}
         did={me.wallet.did}
-        seed={me.profile.slug ?? me.wallet.address}
+        avatarSeed={me.profile.avatarSeed}
         visibility={me.profile.visibility}
         onEdit={() => setEditing(true)}
       />
