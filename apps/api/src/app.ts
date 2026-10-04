@@ -10,6 +10,7 @@ import { chainFromConfig, type ChainAdapter } from "./chain/adapter";
 import { bootstrapIssuer } from "./issuers/register";
 import { loadConfig, type Config } from "./config";
 import { problem, registerProblemHandlers } from "./problem";
+import { adminRoutes } from "./routes/admin";
 import { aiRoutes } from "./routes/ai";
 import { authRoutes } from "./routes/auth";
 import { claimRoutes } from "./routes/claims";
@@ -91,6 +92,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(verificationRoutes);
   await app.register(aiRoutes);
   await app.register(verifyRoutes);
+  await app.register(adminRoutes);
 
   return app;
 }
