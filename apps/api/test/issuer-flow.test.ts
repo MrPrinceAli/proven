@@ -234,6 +234,115 @@ describe.skipIf(!anvilReady)("issuer flow: request → approve → anchor → re
     expect((await submit(other, [user.evidence.id])).statusCode).toBe(404);
   });
 
+  /** Submits, approves and returns the ids needed to inspect the credential. */
+  async function approved(u: Awaited<ReturnType<typeof userWithClaim>>) {
+    const requestId = (await submit(u)).json().id;
+    const issuer = await loginIssuer();
+    const res = await app.inject({
+      method: "POST",
+      url: `/issuer/verification-requests/${requestId}/approve`,
+      cookies: issuer.cookies,
+    });
+    expect(res.statusCode).toBe(200);
+    const credentialId = (res.json().credentialId as string).replace("urn:uuid:", "");
+    return { issuer, requestId, credentialId };
+  }
+
+  describe("lifecycle integrity (D-035)", () => {
+    it("refuses deleting a verified claim, and still revokes if an old claim was deleted", async () => {
+      const user = await userWithClaim();
+      const { issuer, credentialId } = await approved(user);
+      const del = await app.inject({
+        method: "DELETE",
+        url: `/me/achievements/${user.achievement.id}`,
+        cookies: user.cookies,
+      });
+      expect(del.statusCode).toBe(409);
+
+      // A claim deleted before this rule existed must not break revocation or /verify.
+      await testPrisma().achievement.delete({ where: { id: user.achievement.id } });
+      const revoke = await app.inject({
+        method: "POST",
+        url: `/issuer/credentials/${credentialId}/revoke`,
+        cookies: issuer.cookies,
+        payload: { reason: "Uji klaim terhapus" },
+      });
+      expect(revoke.statusCode).toBe(200);
+      const verify = (await app.inject({ method: "GET", url: `/verify/${credentialId}` })).json();
+      expect(verify).toMatchObject({ status: "revoked", revoked: true, chainChecked: true });
+    });
+
+    it("only accepts evidence linked to the claim", async () => {
+      const user = await userWithClaim();
+      const loose = (await upload(app, user.cookies)).json();
+      const res = await submit(user, [user.evidence.id, loose.id]);
+      expect(res.statusCode).toBe(422);
+    });
+
+    it("freezes evidence behind a pending or approved request", async () => {
+      const user = await userWithClaim();
+      expect((await submit(user)).statusCode).toBe(201);
+      const unlink = await app.inject({
+        method: "DELETE",
+        url: `/me/evidence/${user.evidence.id}/links?entityType=achievement&entityId=${user.achievement.id}`,
+        cookies: user.cookies,
+      });
+      expect(unlink.statusCode).toBe(409);
+
+      const other = await userWithClaim();
+      await approved(other);
+      const del = await app.inject({
+        method: "DELETE",
+        url: `/me/evidence/${other.evidence.id}`,
+        cookies: other.cookies,
+      });
+      expect(del.statusCode).toBe(409);
+    });
+
+    it("forbids an issuer from verifying their own claim", async () => {
+      const issuer = await loginIssuer();
+      const achievement = (
+        await app.inject({
+          method: "POST",
+          url: "/me/achievements",
+          cookies: issuer.cookies,
+          payload: { title: "Prestasi sendiri" },
+        })
+      ).json();
+      const evidence = (await upload(app, issuer.cookies)).json();
+      await app.inject({
+        method: "POST",
+        url: `/me/evidence/${evidence.id}/links`,
+        cookies: issuer.cookies,
+        payload: { entityType: "achievement", entityId: achievement.id },
+      });
+      const issuerId = (await testPrisma().issuer.findFirstOrThrow()).id;
+      const res = await app.inject({
+        method: "POST",
+        url: "/me/verification-requests",
+        cookies: issuer.cookies,
+        payload: {
+          entityType: "achievement",
+          entityId: achievement.id,
+          issuerId,
+          evidenceIds: [evidence.id],
+        },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+
+    it("labels credentials issued to demo sandboxes, in the VC and on /verify", async () => {
+      const user = await userWithClaim();
+      await testPrisma().user.update({ where: { id: user.userId }, data: { authProvider: "demo" } });
+      const { credentialId } = await approved(user);
+      const credential = await testPrisma().credential.findUniqueOrThrow({ where: { id: credentialId } });
+      const vc = VerifiableCredentialSchema.parse(credential.vcJson);
+      expect(vc.credentialSubject.achievement.name).toBe("[DEMO] XYZ Hackathon 2026 — Winner");
+      const verify = (await app.inject({ method: "GET", url: `/verify/${credentialId}` })).json();
+      expect(verify).toMatchObject({ status: "active", sandbox: true });
+    });
+  });
+
   it("answers 403 to a non-issuer", async () => {
     const user = await userWithClaim();
     const requestId = (await submit(user)).json().id;

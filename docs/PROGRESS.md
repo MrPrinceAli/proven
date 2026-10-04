@@ -258,3 +258,5 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 **Logo (2026-10-04):** dipilih opsi #9 "Node P" (huruf P dengan node terverifikasi) dari kanvas 10 opsi; dipakai di semua header dan favicon. Migrasi data `20261004040000_showcase_persona` memindahkan profil pajangan ke `arya-pratama` dan memberi nama + avatar ke sandbox demo lama secara otomatis saat deploy.
 
 **Sertifikat pajangan (2026-10-04):** sertifikat PDF profil Arya Pratama dibuat ulang atas nama persona (bukan lagi "@rina-demo") oleh langkah build `data:heal` (idempoten, baris evidence yang sama, hash baru dicatat di chain of custody + audit `evidence.regenerated`). Data uji juga tidak lagi memakai nama "rina".
+
+**Perbaikan wajib dari audit (2026-10-04, D-035):** klaim terverifikasi tidak bisa dihapus dan revoke tidak lagi rusak oleh klaim terhapus; kredensial mode demo bertanda `[DEMO]` + peringatan di `/verify`; issuer demo terbatas ke antrean (tanpa admin/edit akun); issuer tidak bisa memverifikasi diri sendiri; bukti terkunci setelah diajukan/disetujui. Test API 135 (6 baru).

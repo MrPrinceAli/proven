@@ -146,7 +146,12 @@ export function ClaimSection({
                     <button
                       type="button"
                       onClick={() => onDelete(item)}
-                      disabled={item.status === "PENDING_ISSUER"}
+                      disabled={item.status === "PENDING_ISSUER" || item.status === "VERIFIED"}
+                      title={
+                        item.status === "VERIFIED"
+                          ? "Klaim terverifikasi tidak bisa dihapus selama kredensialnya aktif"
+                          : undefined
+                      }
                       aria-label={`Hapus ${kind.primary(item)}`}
                       className="rounded-full p-2 text-muted hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
                     >

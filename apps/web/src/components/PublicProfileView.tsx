@@ -24,6 +24,7 @@ export interface PublicProfile {
     issuer: string;
     status: string;
     issuedAt: string;
+    sandbox?: boolean;
   }[];
 }
 
@@ -63,6 +64,11 @@ export function PublicProfileView({ profile }: { profile: PublicProfile }) {
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium">{c.name}</p>
                       <StatusBadge status={credentialBadge(c.status)} />
+                      {c.sandbox && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                          Demo
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-muted">
                       {c.issuer} · {dateFormat.format(new Date(c.issuedAt))}

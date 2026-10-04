@@ -20,6 +20,7 @@ interface ClaimDelegate {
   findUnique(args: { where: { id: string } }): Promise<ClaimRow | null>;
   create(args: { data: Record<string, unknown> }): Promise<ClaimRow>;
   update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<ClaimRow>;
+  updateMany(args: { where: { id: string }; data: Record<string, unknown> }): Promise<{ count: number }>;
   delete(args: { where: { id: string } }): Promise<ClaimRow>;
 }
 
