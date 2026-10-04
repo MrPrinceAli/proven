@@ -1,8 +1,20 @@
 "use client";
 
-import { Card, IconFile, IconUser, SectionCard, StatusBadge, STATUS_STYLES, buttonClasses } from "@proven/ui";
+import {
+  Card,
+  IconDownload,
+  IconFile,
+  IconUser,
+  SectionCard,
+  StatusBadge,
+  STATUS_STYLES,
+  buttonClasses,
+} from "@proven/ui";
 import Link from "next/link";
-import { useClaims, useEvidence } from "@/lib/queries";
+import { CvPdfButton } from "@/components/CvPdfButton";
+import { cvFromProfile } from "@/lib/cv-model";
+import { publicEnv } from "@/lib/env";
+import { useClaims, useEvidence, useMyRequests } from "@/lib/queries";
 import { useSession } from "@/lib/session";
 
 const STATUSES = [
@@ -18,6 +30,7 @@ export default function DashboardPage() {
   const { data: me } = useSession();
   const { data: claims, isLoading } = useClaims();
   const { data: evidence } = useEvidence();
+  const { data: requests } = useMyRequests();
   if (!me) return null;
 
   const total = claims ? Object.values(claims.summary).reduce((a, b) => a + b, 0) : 0;
@@ -94,6 +107,21 @@ export default function DashboardPage() {
           <Link href="/dashboard/evidence" className={buttonClasses("secondary")}>
             <IconFile className="h-4 w-4" /> Unggah bukti
           </Link>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="CV & data kamu">
+        <p className="text-sm text-muted">
+          CV PDF memakai data profil; item yang diverifikasi issuer diberi tanda, tautan, dan QR ke halaman
+          verifikasi.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <CvPdfButton
+            build={() => (claims ? cvFromProfile(me, claims, requests ?? [], window.location.origin) : null)}
+          />
+          <a href={`${publicEnv.apiUrl}/me/data-export`} className={buttonClasses("ghost")}>
+            <IconDownload className="h-4 w-4" /> Unduh data saya (JSON)
+          </a>
         </div>
       </SectionCard>
     </div>

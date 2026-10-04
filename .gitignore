@@ -13,3 +13,5 @@ packages/contracts/broadcast
 packages/contracts/deployments/31337.json
 .turbo
 *.tsbuildinfo
+playwright-report
+test-results

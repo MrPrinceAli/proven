@@ -10,8 +10,9 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 | W3 Profil & Evidence | ✅ selesai — CI hijau, alur jalan di preview | `w3-profile-evidence` · PR #4 |
 | W4 Mesin Kredensial | ✅ selesai — CI hijau | `w4-credential-engine` · PR #5 |
 | W5 Alur Issuer | ✅ selesai — CI hijau (demo testnet menunggu deploy kontrak) | `w5-issuer-flow` · PR #6 |
-| W6 AI Layer | ✅ selesai (AI asli opsional, butuh API key) | `w6-ai-layer` |
-| W7–W8 | ⏳ belum | — |
+| W6 AI Layer | ✅ selesai — CI hijau (AI asli opsional, butuh API key) | `w6-ai-layer` · PR #7 |
+| W7 Verifier & Output | ✅ selesai | `w7-verifier-output` |
+| W8 | ⏳ belum | — |
 
 ---
 
@@ -179,3 +180,27 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 **Langkah manual (opsional)**
 - Untuk AI asli: Vercel Env `LLM_PROVIDER=anthropic`, `LLM_API_KEY` (Sensitive), opsional `LLM_MODEL` (default `claude-opus-5-5`). Tanpa itu, mode `mock` tetap berfungsi untuk demo alur.
 - Untuk metrik: `LLM_API_KEY=… pnpm ai:eval` lalu lihat `packages/ai/eval/report.md` (memanggil API berbayar).
+
+---
+
+## W7 — Verifier, Profil Publik, QR & CV PDF (2026-10-04)
+
+**Selesai — API**
+- `GET /verify/:credentialId` (uuid atau `urn:uuid:`; publik): VC lengkap, issuer + DID, subject DID, anchor (tx, blok, kontrak, chain), status final dari `isRevoked` on-chain lalu kedaluwarsa; DB disinkronkan bila beda + audit; cache 30 detik (D-029).
+- `GET /credentials/:credentialId/status`, `GET /me/data-export` (semua data user + VC, tanpa ciphertext; UU PDP), `GET /p/:slug` kini menyertakan daftar kredensial.
+- 5 test baru (Anvil): verify via urn/uuid + status, revoke lewat Proven langsung terlihat, revoke langsung on-chain → DB tersinkron + audit, 404/400, kredensial di profil publik & ekspor data. Total test API 116.
+
+**Selesai — Web**
+- `/verify/[id]` (server-rendered): segel besar Aktif/Dicabut/Kedaluwarsa/Tidak cocok/Tidak ditemukan (`role=status` + `aria-label`), issuer, subject DID, tanggal, tx + blok, "Lihat on-chain", unduh VC JSON, QR halaman verifikasi.
+- "Verifikasi independen": hash dihitung ulang di browser, `getAnchor` dibaca langsung dari RPC publik, tanda tangan EIP-712 dicek, checklist 8 langkah.
+- `/verify`: tempel/unggah VC JSON → verifikasi independen yang sama.
+- `/p/[slug]` (server-rendered, 404 sungguhan, OpenGraph): kredensial dengan QR + link verify, QR profil, tombol salin tautan.
+- CV PDF dari dashboard (data profil) dan dari CV AI ("Setujui & unduh PDF"): item terverifikasi bertanda + URL + QR, footer "Diverifikasi melalui Proven — {origin}". Tombol "Unduh data saya (JSON)".
+- Aksesibilitas: alt text QR, `aria-label` segel, skip link, fokus terlihat (sudah sejak W3).
+
+**Selesai — E2E**
+- Playwright (`pnpm --filter @proven/web e2e`, job CI `e2e`): 7 test — Aktif + tx + QR, verifikasi independen tetap jalan saat semua `/api/**` diputus, VC diubah 1 karakter → Tidak cocok, profil publik + QR + link verify, revoke → Dicabut (server & independen), profil privat → 404, ID tak dikenal → Tidak ditemukan.
+
+**Langkah manual untuk user**
+- Setelah kontrak di-deploy ke BSC Testnet: isi Vercel Env `NEXT_PUBLIC_REGISTRY_ADDRESS` (dibaca saat build — redeploy setelah mengisi) agar verifikasi independen aktif.
+- Uji QR dari HP memakai URL production (preview dilindungi login Vercel).

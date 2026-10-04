@@ -9,26 +9,32 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "tsx e2e/run.ts"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
     "@proven/api": "workspace:*",
+    "@proven/contracts": "workspace:^",
     "@proven/db": "workspace:^",
     "@proven/ui": "workspace:*",
     "@proven/vc": "workspace:^",
+    "@react-pdf/renderer": "4.9.0",
     "@reown/appkit": "1.8.24",
     "@reown/appkit-adapter-wagmi": "1.8.24",
     "@tanstack/react-query": "5.104.1",
     "next": "14.2.35",
+    "qrcode": "1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "viem": "2.57.2",
     "wagmi": "2.19.5"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@prisma/nextjs-monorepo-workaround-plugin": "5.22.0",
     "@types/node": "22.20.5",
+    "@types/qrcode": "1.5.6",
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
     "autoprefixer": "10.4.21",
@@ -36,6 +42,7 @@
     "eslint-config-next": "14.2.35",
     "postcss": "8.5.6",
     "tailwindcss": "3.4.19",
+    "tsx": "^4.20.0",
     "typescript": "5.4.5",
     "vitest": "^3.2.4"
   }

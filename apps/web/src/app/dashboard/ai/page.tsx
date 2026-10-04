@@ -3,13 +3,17 @@
 import { Badge, Button, IconSparkles, SectionCard, Textarea, useToast } from "@proven/ui";
 import { useState } from "react";
 import { AiLabel } from "@/components/AiLabel";
+import { CvPdfButton } from "@/components/CvPdfButton";
+import { cvFromAi } from "@/lib/cv-model";
 import { ApiError } from "@/lib/api";
+import { useSession } from "@/lib/session";
 import { KINDS } from "@/lib/claims";
 import {
   useAiCv,
   useAiSummary,
   useClaims,
   useEvidence,
+  useMyRequests,
   useUpdateProfile,
   type AiCv,
   type AiEnvelope,
@@ -131,6 +135,9 @@ function SummaryCard() {
 
 function CvCard() {
   const cv = useAiCv();
+  const { data: me } = useSession();
+  const { data: claims } = useClaims();
+  const { data: requests } = useMyRequests();
   const toast = useToast();
   const label = useSourceLabels();
   const data = cv.data?.mode === "cv" ? (cv.data as AiEnvelope<AiCv>) : null;
@@ -166,6 +173,16 @@ function CvCard() {
               </ul>
             </section>
           ))}
+          <div>
+            <CvPdfButton
+              label="Setujui & unduh PDF"
+              build={() =>
+                me && claims
+                  ? cvFromAi(me, data.result, claims, requests ?? [], window.location.origin)
+                  : null
+              }
+            />
+          </div>
           {data.removed.length > 0 && (
             <p className="text-xs text-muted">
               {data.removed.length} kalimat tanpa sumber valid dibuang oleh guardrail.

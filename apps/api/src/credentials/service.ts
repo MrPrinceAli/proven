@@ -13,6 +13,7 @@ import { audit } from "../audit";
 import type { ChainAdapter } from "../chain/adapter";
 import { CLAIM_KINDS, linkedEvidence, statusAfterLinkChange } from "../claims";
 import { problem } from "../problem";
+import { invalidateVerifyCache } from "./verify-cache";
 
 /** Credentials are valid for five years (§W5 6c). */
 const VALIDITY_MS = 5 * 365 * 24 * 60 * 60 * 1000;
@@ -274,5 +275,6 @@ export async function revokeCredential(
       ip,
     });
   });
+  invalidateVerifyCache(credentialId);
   return { credentialId: credentialUrn(credentialId), status: "revoked" as const, txHash: tx.txHash };
 }
