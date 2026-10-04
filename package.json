@@ -14,8 +14,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:contracts": "pnpm --filter @proven/contracts forge:test",
-    "db:migrate": "echo \"TODO(W2): prisma migrate\"",
-    "db:seed": "echo \"TODO(W2): prisma seed\"",
+    "db:migrate": "pnpm --filter @proven/db migrate:deploy",
+    "db:seed": "pnpm --filter @proven/db seed",
     "contracts:deploy:local": "pnpm --filter @proven/contracts deploy:local"
   },
   "devDependencies": {
@@ -26,5 +26,10 @@
     "prettier": "^3.6.2",
     "turbo": "2.11.7",
     "typescript": "5.4.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@reown/appkit-adapter-wagmi>@wagmi/connectors": "6.2.0"
+    }
   }
 }

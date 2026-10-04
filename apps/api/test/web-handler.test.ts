@@ -1,9 +1,9 @@
 import Fastify from "fastify";
 import { describe, expect, it } from "vitest";
-import { buildApp } from "../src/app";
 import { createWebHandler } from "../src/web-handler";
+import { testApp } from "./helpers";
 
-async function testApp() {
+async function echoApp() {
   const app = Fastify();
   app.get("/echo", async (req) => ({ query: req.query, cookie: req.headers.cookie ?? null }));
   app.post("/echo", async (req) => ({ body: req.body }));
@@ -17,14 +17,14 @@ async function testApp() {
 
 describe("createWebHandler", () => {
   it("serves /api/health from the real app", async () => {
-    const handle = createWebHandler(() => buildApp());
+    const handle = createWebHandler(() => testApp());
     const res = await handle(new Request("https://proven.test/api/health"));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ status: "ok" });
   });
 
   it("strips the prefix and forwards query and request headers", async () => {
-    const handle = createWebHandler(testApp);
+    const handle = createWebHandler(echoApp);
     const res = await handle(
       new Request("https://proven.test/api/echo?x=1", { headers: { cookie: "sid=abc" } }),
     );
@@ -32,7 +32,7 @@ describe("createWebHandler", () => {
   });
 
   it("forwards a JSON body", async () => {
-    const handle = createWebHandler(testApp);
+    const handle = createWebHandler(echoApp);
     const res = await handle(
       new Request("https://proven.test/api/echo", {
         method: "POST",
@@ -44,13 +44,13 @@ describe("createWebHandler", () => {
   });
 
   it("keeps multiple set-cookie headers", async () => {
-    const handle = createWebHandler(testApp);
+    const handle = createWebHandler(echoApp);
     const res = await handle(new Request("https://proven.test/api/cookies"));
     expect(res.headers.getSetCookie()).toEqual(["a=1; Path=/", "b=2; Path=/"]);
   });
 
   it("returns an empty body for 204", async () => {
-    const handle = createWebHandler(testApp);
+    const handle = createWebHandler(echoApp);
     const res = await handle(new Request("https://proven.test/api/empty", { method: "DELETE" }));
     expect(res.status).toBe(204);
     expect(await res.text()).toBe("");
@@ -60,7 +60,7 @@ describe("createWebHandler", () => {
     let builds = 0;
     const handle = createWebHandler(async () => {
       builds += 1;
-      return testApp();
+      return echoApp();
     });
     await Promise.all([handle(new Request("https://p/api/echo")), handle(new Request("https://p/api/echo"))]);
     expect(builds).toBe(1);

@@ -79,3 +79,23 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** Spesifikasi menyebut OpenZeppelin v5.x (contoh v5.1.0).
 **Keputusan:** OpenZeppelin `v5.7.0` (rilis v5 terbaru, kompatibel solc 0.8.24) dan forge-std `v1.17.0`, sebagai git submodule di `packages/contracts/lib` dan dikunci di `foundry.lock`. CI memakai Foundry `v1.7.1`.
 **Konsekuensi:** Patch keamanan v5 terbaru ikut terbawa tanpa mengubah API yang dipakai kontrak.
+
+## D-016 — Kolom status tetap `text`, divalidasi Zod (2026-10-04, W2)
+**Konteks:** W2 meminta memilih Prisma enum atau string tervalidasi Zod untuk status/visibility/state.
+**Keputusan:** Tetap `text` seperti DDL §S6.2; nilai sah didefinisikan di `packages/db/src/enums.ts` (Zod) dan dipakai di setiap boundary. `CLAIM_WITHOUT_EVIDENCE` sengaja tidak termasuk status tersimpan (hanya label claim-check, §S4).
+**Konsekuensi:** Skema DB sama persis dengan DDL; menambah nilai tidak butuh migrasi enum Postgres.
+
+## D-017 — Verifikasi tanda tangan SIWE: lokal dulu, RPC sebagai fallback (2026-10-04, W2)
+**Konteks:** `publicClient.verifySiweMessage` (viem) mencoba verifikasi ERC-6492 lewat RPC sebelum ECDSA, sehingga setiap login bergantung pada RPC publik dan test butuh jaringan.
+**Keputusan:** Field pesan (domain, uri, chainId, waktu, nonce) divalidasi sendiri; tanda tangan EOA diverifikasi lokal dengan `verifyMessage` (ECDSA), dan hanya jika gagal dicoba `publicClient.verifyMessage` (ERC-1271/6492, untuk smart wallet). Nonce dikonsumsi atomik setelah tanda tangan valid.
+**Konsekuensi:** Login EOA tidak menyentuh RPC; smart wallet tetap didukung.
+
+## D-018 — Wallet connect: AppKit opsional, fallback MetaMask; kompatibilitas paket (2026-10-04, W2)
+**Konteks:** Reown AppKit butuh Project ID (akun reown.com). Adapter AppKit 1.8.24 punya optional dependency `@wagmi/connectors >=5.9.9` yang ter-resolve ke 8.x (generasi wagmi v3) dan merusak build dengan wagmi 2; konektor Base Account menarik peer opsional `@x402/*` yang tidak terpasang.
+**Keputusan:** Jika `NEXT_PUBLIC_REOWN_PROJECT_ID` kosong, web memakai wagmi + konektor `injected` (MetaMask dan wallet browser lain); jika terisi, AppKit dipakai. `pnpm.overrides` mengunci `@reown/appkit-adapter-wagmi>@wagmi/connectors` ke `6.2.0`. Webpack meng-alias `@x402/*` dan `@react-native-async-storage/async-storage` ke modul kosong.
+**Konsekuensi:** Login bisa dicoba tanpa akun Reown. Upgrade wagmi/AppKit harus mengecek ulang override ini.
+
+## D-019 — Migrasi database saat build Vercel (2026-10-04, W2)
+**Konteks:** Tidak ada server/laptop untuk menjalankan `prisma migrate deploy`; Neon membuat branch DB per preview.
+**Keputusan:** Build Command project Vercel = `pnpm run build:vercel` (`apps/web`), yang menjalankan `packages/db/scripts/migrate-deploy.mjs` lalu `next build`. Jika `DATABASE_URL` belum ada, migrasi dilewati dengan peringatan dan API menjawab 503 problem+json berisi nama variabel yang kurang.
+**Konsekuensi:** Setiap deploy preview/production memigrasi DB-nya sendiri. Build tetap hijau sebelum Neon tersambung.

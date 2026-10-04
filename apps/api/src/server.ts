@@ -2,5 +2,5 @@
 import { buildApp } from "./app";
 
 const port = Number(process.env.API_PORT ?? 4000);
-const app = await buildApp({ logger: true });
+const app = await buildApp({ fastify: { logger: true } });
 await app.listen({ port, host: "0.0.0.0" });
