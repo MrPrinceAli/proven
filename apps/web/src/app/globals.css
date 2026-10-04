@@ -23,7 +23,7 @@ body {
   }
   .glass {
     background: linear-gradient(145deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.04));
-    backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
     border: 1px solid rgb(255 255 255 / 0.14);
   }
   .text-shine {
@@ -104,6 +104,23 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Immersive "Cara kerja": stack the scenes instead of driving them by scroll. */
+  .immersive {
+    height: auto;
+  }
+  .immersive-stage {
+    position: relative;
+    height: auto;
+  }
+  .immersive-scene {
+    position: relative;
+    min-height: 100svh;
+    clip-path: none !important;
+  }
+  .immersive-rail {
+    display: none;
+  }
+
   .text-shine,
   .animate-float,
   .animate-sweep,

@@ -33,12 +33,12 @@ export async function certificatePdf(issuerName: string): Promise<Buffer> {
   const green = rgb(0.016, 0.47, 0.34);
   page.drawRectangle({ x: 24, y: 24, width: 794, height: 547, borderColor: green, borderWidth: 4 });
   page.drawText("SERTIFIKAT PENGHARGAAN", { x: 220, y: 470, size: 32, font: bold, color: green });
-  page.drawText("diberikan kepada pemilik profil Proven", { x: 285, y: 420, size: 14, font: regular });
+  page.drawText("diberikan kepada pemilik profil Proven-ID", { x: 285, y: 420, size: 14, font: regular });
   page.drawText("@rina-demo", { x: 345, y: 370, size: 28, font: bold });
   page.drawText("sebagai JUARA 1 (Winner) XYZ Hackathon 2026", { x: 230, y: 310, size: 18, font: regular });
   page.drawText("Peringkat pertama dari 120 tim.", { x: 320, y: 280, size: 14, font: regular });
-  page.drawText(`${issuerName} · Bali, 2026`, { x: 330, y: 120, size: 14, font: regular });
-  page.drawText("Dokumen contoh untuk demo Proven.", {
+  page.drawText(`${issuerName} · 2026`, { x: 330, y: 120, size: 14, font: regular });
+  page.drawText("Dokumen contoh untuk demo Proven-ID.", {
     x: 320,
     y: 60,
     size: 10,

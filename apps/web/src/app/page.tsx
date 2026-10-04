@@ -5,7 +5,8 @@ import Link from "next/link";
 import { DemoEntry } from "@/components/DemoEntry";
 import { CredentialMock } from "@/components/landing/CredentialMock";
 import { Logo } from "@/components/landing/Logo";
-import { Bento, CtaBand, LandingFooter, Steps, TrustStrip } from "@/components/landing/Sections";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Bento, CtaBand, LandingFooter, TrustStrip } from "@/components/landing/Sections";
 import { LoginButton } from "@/components/LoginButton";
 import { useSession } from "@/lib/session";
 import { site } from "@/lib/site";
@@ -22,20 +23,20 @@ export default function HomePage() {
         <div aria-hidden className="bg-grid mask-fade absolute inset-0 -z-10" />
         <div
           aria-hidden
-          className="absolute -top-48 left-1/2 -z-10 h-[36rem] w-[64rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(16_185_129/0.35),transparent)]"
+          className="absolute -top-48 left-1/2 -z-10 h-[32rem] w-[min(64rem,100vw)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(16_185_129/0.35),transparent)]"
         />
         <div
           aria-hidden
           className="absolute -right-40 bottom-0 -z-10 h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(closest-side,rgb(45_212_191/0.18),transparent)]"
         />
 
-        <header className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <header className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo tone="dark" />
           <nav aria-label="Utama" className="flex items-center gap-1">
             <a href="#cara-kerja" className={`${NAV_LINK} hidden sm:inline-flex`}>
               Cara kerja
             </a>
-            <Link href="/p/rina-demo" className={`${NAV_LINK} hidden sm:inline-flex`}>
+            <Link href={`/p/${site.showcaseSlug}`} className={`${NAV_LINK} hidden sm:inline-flex`}>
               Contoh profil
             </Link>
             <Link href="/verify" className={NAV_LINK}>
@@ -44,7 +45,7 @@ export default function HomePage() {
           </nav>
         </header>
 
-        <main className="mx-auto grid max-w-6xl items-center gap-16 px-4 pb-24 pt-10 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:pb-32 lg:pt-16">
+        <main className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:pb-20 lg:pt-8">
           <div className="animate-rise">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-emerald-200">
               <span className="relative flex h-2 w-2">
@@ -53,41 +54,41 @@ export default function HomePage() {
               </span>
               Identitas profesional terverifikasi · live di BNB Chain
             </p>
-            <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-[3.4rem] xl:text-[3.9rem]">
+            <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl xl:text-[3.25rem]">
               <span className="sr-only">{site.tagline}</span>
               <span aria-hidden>
                 <span className="whitespace-nowrap">Anyone can claim</span>{" "}
                 <span className="whitespace-nowrap">a skill.</span>
                 <br />
-                <span className="text-white/60">Proven lets you </span>
+                <span className="text-white/60">Proven-ID lets you </span>
                 <em className="whitespace-nowrap pr-1 font-display text-[1.12em] font-normal text-shine">
                   prove it.
                 </em>
               </span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/70">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/70 sm:text-[1.05rem]">
               Ubah klaim profesional menjadi kredensial yang ditandatangani issuer dan dicatat di blockchain —
               bisa dicek siapa saja, kapan saja.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-start gap-3">
+            <div className="mt-7 flex flex-wrap items-start gap-3">
               {me ? (
-                <Link href="/dashboard" className={buttonClasses("inverse", "h-12 px-6 text-base")}>
+                <Link href="/dashboard" className={buttonClasses("inverse", "h-11 px-6")}>
                   Buka dashboard
                 </Link>
               ) : (
                 <LoginButton tone="dark" />
               )}
               <Link
-                href="/p/rina-demo"
-                className="inline-flex h-12 items-center gap-2 rounded-full px-5 text-base font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
+                href={`/p/${site.showcaseSlug}`}
+                className="inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
               >
                 Lihat contoh profil <span aria-hidden>→</span>
               </Link>
             </div>
 
             {!me && (
-              <div className="mt-8">
+              <div className="mt-6">
                 <DemoEntry tone="dark" />
               </div>
             )}
@@ -103,15 +104,15 @@ export default function HomePage() {
       </div>
 
       <TrustStrip />
-      <Steps />
+      <HowItWorks />
       <Bento />
       <CtaBand>
-        <Link href="/p/rina-demo" className={buttonClasses("inverse", "h-12 px-6 text-base")}>
+        <Link href={`/p/${site.showcaseSlug}`} className={buttonClasses("inverse", "h-11 px-6")}>
           Jelajahi contoh profil
         </Link>
         <Link
           href="/verify"
-          className="inline-flex h-12 items-center rounded-full border border-white/20 px-6 text-base font-semibold text-white transition hover:bg-white/10"
+          className="inline-flex h-11 items-center rounded-full border border-white/20 px-6 text-sm font-semibold text-white transition hover:bg-white/10"
         >
           Verifikasi kredensial
         </Link>

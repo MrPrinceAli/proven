@@ -164,3 +164,8 @@ Entri terbaru ditambahkan di bawah. Tanggal dalam ISO 8601.
 **Konteks:** Juri hackathon perlu menjelajahi semua fitur, termasuk peran issuer, tanpa menyiapkan wallet atau memegang kunci issuer.
 **Keputusan:** `DEMO_MODE=1` (ditolak config di mainnet) membuka `POST /auth/demo {role}`: "user" membuat **sandbox** baru per pengunjung (alamat acak tanpa kunci, `users.auth_provider = "demo"`, diisi `seedDemo` dengan slug `demo-xxxxxx`) atau melanjutkan sandbox milik browser itu; "issuer" masuk sebagai issuer relay. Sesi ditandai `sessions.via = "demo"`. Issuer demo hanya melihat dan memproses permintaan/kredensial milik akun demo — profil pajangan dan wallet sungguhan tidak tersentuh (`assertDemoScope`). Persetujuan issuer demo tetap transaksi nyata di testnet. `GET /config` memberi tahu UI; banner "Mode demo" + tombol ganti peran.
 **Konsekuensi:** Aturan emas #3 tetap berlaku untuk akun nyata: status VERIFIED pada wallet sungguhan hanya bisa diberikan issuer yang login dengan wallet issuer. Mode demo dimatikan dengan menghapus `DEMO_MODE`.
+
+## D-033 — Nama tampilan "Proven-ID" (2026-10-04)
+**Konteks:** User meminta nama aplikasi diseragamkan menjadi "Proven-ID".
+**Keputusan:** Semua teks yang terlihat pengguna (judul, logo, metadata, pesan SIWE, CV PDF, landing) memakai "Proven-ID". Identitas protokol **tidak** diubah: domain EIP-712 tetap `name: "Proven"`, cryptosuite `eip712-secp256k1-proven-2026`, nama paket `@proven/*`, dan repo `proven`.
+**Konsekuensi:** Kredensial yang sudah terbit dan tanda tangannya tetap valid; tidak perlu deploy ulang kontrak.

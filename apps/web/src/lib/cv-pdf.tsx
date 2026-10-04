@@ -41,7 +41,7 @@ const s = StyleSheet.create({
 
 function CvDocument({ cv, qrs }: { cv: CvModel; qrs: Map<string, string> }) {
   return (
-    <Document title={`CV ${cv.name}`} author="Proven" creator="Proven">
+    <Document title={`CV ${cv.name}`} author="Proven-ID" creator="Proven-ID">
       <Page size="A4" style={s.page}>
         <Text style={s.name}>{cv.name}</Text>
         {cv.headline ? <Text style={s.headline}>{cv.headline}</Text> : null}
@@ -76,7 +76,7 @@ function CvDocument({ cv, qrs }: { cv: CvModel; qrs: Map<string, string> }) {
           </View>
         ))}
         <Text style={s.footer} fixed>
-          Diverifikasi melalui Proven — {cv.origin}
+          Diverifikasi melalui Proven-ID — {cv.origin}
         </Text>
       </Page>
     </Document>

@@ -81,7 +81,7 @@ export function IndependentVerifier({ vc, autoRun = false }: { vc: unknown; auto
         <h2 className="text-lg font-semibold">Verifikasi independen</h2>
         <p className="text-sm text-muted">
           Dijalankan sepenuhnya di browser kamu dan langsung ke blockchain — tidak bergantung pada server
-          Proven.
+          Proven-ID.
         </p>
       </div>
       {!configured ? (

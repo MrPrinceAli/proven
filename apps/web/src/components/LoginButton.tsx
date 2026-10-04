@@ -54,7 +54,7 @@ export function LoginButton({ tone = "light" }: { tone?: "light" | "dark" } = {}
       const message = createSiweMessage({
         domain: window.location.host,
         address: account,
-        statement: "Masuk ke Proven. Tanda tangan ini gratis dan tidak mengirim transaksi.",
+        statement: "Masuk ke Proven-ID. Tanda tangan ini gratis dan tidak mengirim transaksi.",
         uri: window.location.origin,
         version: "1",
         chainId: targetChain.id,
@@ -113,7 +113,7 @@ export function LoginButton({ tone = "light" }: { tone?: "light" | "dark" } = {}
       {hasAppKit && mounted && <AppKitConnect onOpen={(open) => (openModal.current = open)} />}
       <Button
         variant={tone === "dark" ? "inverse" : "primary"}
-        className={tone === "dark" ? "h-12 px-6 text-base" : undefined}
+        className={tone === "dark" ? "h-11 px-6" : undefined}
         onClick={onClick}
         disabled={step !== "idle"}
         aria-busy={step !== "idle"}

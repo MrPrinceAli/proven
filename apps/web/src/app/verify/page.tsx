@@ -3,7 +3,7 @@ import { PublicHeader } from "@/components/PublicHeader";
 
 export const metadata = {
   title: "Verifikasi VC",
-  description: "Verifikasi file kredensial Proven secara independen langsung dari blockchain.",
+  description: "Verifikasi file kredensial Proven-ID secara independen langsung dari blockchain.",
 };
 
 export default function VerifyPage() {

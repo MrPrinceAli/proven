@@ -1,17 +1,18 @@
 import { IconCheckBadge, IconLock, IconSparkles } from "@proven/ui";
+import { site } from "@/lib/site";
 
 /**
  * Decorative preview of a verified credential for the hero. Mirrors the showcase profile
- * (/p/rina-demo); hidden from assistive tech because the real data lives on that page.
+ * (/p/{showcaseSlug}); hidden from assistive tech because the real data lives on that page.
  */
 export function CredentialMock() {
   return (
-    <div aria-hidden className="relative mx-auto w-full max-w-md select-none lg:mx-0">
+    <div aria-hidden className="relative mx-auto w-full max-w-sm select-none lg:ml-auto lg:mr-0">
       {/* halo */}
-      <div className="absolute -inset-10 rounded-full bg-emerald-400/20 blur-3xl" />
+      <div className="absolute -inset-12 bg-[radial-gradient(closest-side,rgb(52_211_153/0.22),transparent)]" />
 
       <div className="animate-float relative">
-        <div className="glass relative overflow-hidden rounded-3xl p-6 shadow-glow">
+        <div className="glass relative overflow-hidden rounded-3xl p-5 shadow-glow">
           {/* light sweep */}
           <div className="animate-sweep pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
@@ -24,17 +25,20 @@ export function CredentialMock() {
             </span>
           </div>
 
-          <div className="mt-6 flex items-center gap-4">
+          <div className="mt-5 flex items-center gap-4">
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-300 to-teal-600 text-lg font-bold text-brand-950 ring-4 ring-white/10">
-              RD
+              {site.showcaseName
+                .split(" ")
+                .map((w) => w[0])
+                .join("")}
             </span>
             <div className="min-w-0">
-              <p className="truncate text-lg font-semibold text-white">Rina · Demo</p>
+              <p className="truncate text-lg font-semibold text-white">{site.showcaseName}</p>
               <p className="truncate text-sm text-white/60">Smart Contract Engineer · BNB Chain</p>
             </div>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
             <p className="text-xs text-white/50">Prestasi</p>
             <p className="mt-1 font-semibold text-white">XYZ Hackathon 2026 — Winner</p>
             <p className="mt-0.5 text-sm text-white/60">Diterbitkan oleh XYZ Community</p>

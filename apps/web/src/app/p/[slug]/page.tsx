@@ -15,13 +15,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const verified = body.credentials.filter((c) => c.status === "active").length;
   const description =
     body.summary.slice(0, 160) ||
-    `Profil profesional terverifikasi di Proven · ${verified} kredensial aktif.`;
+    `Profil profesional terverifikasi di Proven-ID · ${verified} kredensial aktif.`;
   return {
     title,
     description,
     metadataBase: new URL(siteOrigin()),
     alternates: { canonical: `/p/${body.slug}` },
-    openGraph: { title, description, url: `/p/${body.slug}`, type: "profile", siteName: "Proven" },
+    openGraph: { title, description, url: `/p/${body.slug}`, type: "profile", siteName: "Proven-ID" },
     twitter: { card: "summary", title, description },
   };
 }

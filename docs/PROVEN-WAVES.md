@@ -2,7 +2,7 @@
 
 > **Anyone can claim a skill. Proven lets you prove it.**
 
-**Versi:** 1.0 · **Tanggal:** 4 Oktober 2026 · **Track:** Consumer Apps — Indonesia Web3 Hackathon Bali
+**Versi:** 1.0 · **Tanggal:** 4 Oktober 2026 · **Track:** Consumer Apps — Indonesia Web3 Hackathon
 **Sumber yang digabung:** `Proven.md` (dokumen master), `Proven-SRS.md` (spesifikasi), `Proven-RUNBOOK.md` (runbook).
 
 File ini adalah **satu-satunya dokumen** yang perlu kamu berikan ke Claude Code untuk membangun Proven dari folder kosong sampai demo. Isinya dibagi tiga:
