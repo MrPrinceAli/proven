@@ -1,0 +1,26 @@
+name: 🐞 Bug report
+description: Something doesn't work as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Page / route
+      placeholder: https://proven-id.vercel.app/…
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Landing, Profile & claims, Evidence, Issuer, Verification, AI, Smart contracts, Other]
+  - type: textarea
+    id: env
+    attributes:
+      label: Browser / wallet
+      placeholder: Chrome 140, MetaMask 13, demo mode…

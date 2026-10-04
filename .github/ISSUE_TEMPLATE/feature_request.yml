@@ -1,0 +1,22 @@
+name: ✨ Feature request
+description: Suggest an idea for Proven-ID
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who is this for and what are they trying to prove?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed solution
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Golden rules
+      options:
+        - label: This keeps personal data off-chain and leaves "Verified" to issuers only.
+          required: true

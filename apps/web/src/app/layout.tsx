@@ -16,6 +16,8 @@ const display = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
+  // Absolute URLs for the Open Graph / Twitter card image (app/opengraph-image.png).
+  metadataBase: new URL(process.env.APP_URL || "https://proven-id.vercel.app"),
   title: { default: site.name, template: `%s · ${site.name}` },
   description: site.description,
 };
