@@ -15,7 +15,7 @@ export interface CvModel {
   summary: string;
   did: string;
   sections: { title: string; items: CvItem[] }[];
-  /** e.g. https://proven-zeta.vercel.app — used in the footer and verify links. */
+  /** e.g. https://proven-id.vercel.app — used in the footer and verify links. */
   origin: string;
   aiGenerated: boolean;
 }

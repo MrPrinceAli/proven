@@ -32,7 +32,7 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 
 **Vercel**
 - Project `proven` (team Viclatess) dibuat lewat Vercel CLI: root `apps/web`, Node 22.x, framework Next.js, tersambung ke repo GitHub.
-- Preview W0 READY: `GET /api/health` → `{"status":"ok"}` (dicek dengan `vercel curl`). Production: `proven-zeta.vercel.app` (aktif setelah merge ke `main`).
+- Preview W0 READY: `GET /api/health` → `{"status":"ok"}` (dicek dengan `vercel curl`). Production: `proven-id.vercel.app` (aktif setelah merge ke `main`).
 
 **Langkah manual untuk user**
 - Merge PR W0 ke `main` agar URL production aktif (preview dilindungi login Vercel).
@@ -229,18 +229,20 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 1. Merge PR #1 → #8 dan PR W8 ke `main` (berurutan; PR bertumpuk).
 2. Ikuti `docs/DEPLOY-BSC-TESTNET.md`: 2 wallet + tBNB → GitHub Secrets → ops `deploy-contracts` → isi Vercel Env (issuer + alamat kontrak) → redeploy → ops `check-env` → ops `db-seed` → ops `smoke-testnet`.
 3. Opsional: `LLM_PROVIDER=anthropic` + `LLM_API_KEY` di Vercel untuk AI asli, lalu `pnpm ai:eval`.
-4. Latihan dengan `docs/DEMO-SCRIPT.md`; uji QR dari HP di `https://proven-zeta.vercel.app`.
+4. Latihan dengan `docs/DEMO-SCRIPT.md`; uji QR dari HP di `https://proven-id.vercel.app`.
 
 ---
 
 ## Production live di BSC Testnet (2026-10-04)
 
-- **URL:** https://proven-zeta.vercel.app (Vercel `sin1` + Neon `sin1`), semua PR W0–W8 + perbaikan ter-merge, CI `main` hijau.
+- **URL:** https://proven-id.vercel.app (Vercel `sin1` + Neon `sin1`), semua PR W0–W8 + perbaikan ter-merge, CI `main` hijau.
 - **Kontrak (BSC Testnet, chainId 97):** IssuerRegistry `0x69d3961b65dcfff10bf7a71d93375cAe4bE70dC3` · CredentialRegistry `0xcCbC054C107405F0BB8d7adCE3f780914e9Bf0d4` · CredentialSBT `0x5AaD146A14357a1ad91bBFEecB065e173cFc2811` (di-deploy lewat `ops → deploy-contracts`).
 - **Issuer:** XYZ Community `0x0a4CB0DB07d1C06A56218A8f63660e1dFeB2264a` (aktif on-chain). Deployer `0x30aF56449FaA6db6D3f0b353f63808290aee7E03`. Private key: GitHub Secrets / Vercel Env (Sensitive) + salinan lokal milik user di luar repo.
 - **`check:env`:** semua ✅.
-- **Profil pajangan:** https://proven-zeta.vercel.app/p/rina-demo dengan kredensial on-chain `urn:uuid:6482c7d2-de22-4482-94df-0fac50635d35`.
+- **Profil pajangan:** https://proven-id.vercel.app/p/rina-demo dengan kredensial on-chain `urn:uuid:6482c7d2-de22-4482-94df-0fac50635d35`.
 - **Mode demo (D-032):** aktif (`DEMO_MODE=1`); tombol "Coba sebagai User/Issuer" di landing.
 - **Diuji langsung di production (Playwright):** profil pajangan + verifikasi independen dari RPC BSC Testnet → Aktif; mode demo user → issuer approve (tx nyata) → kredensial Terverifikasi + anchor → halaman verify Aktif.
 
 **Opsional tersisa:** AI Claude asli (`LLM_PROVIDER=anthropic`, `LLM_API_KEY` di Vercel), verifikasi source kontrak di BscScan (`ETHERSCAN_API_KEY`), OpenAPI, mint SBT.
+
+**Domain (2026-10-04):** production pindah ke **https://proven-id.vercel.app**; `proven-zeta.vercel.app` dialihkan permanen (308). `APP_DOMAIN`/`APP_URL` diperbarui. VC yang sudah terbit tetap valid (URL status di dalamnya ikut dialihkan).

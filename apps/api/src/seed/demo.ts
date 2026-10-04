@@ -111,7 +111,7 @@ export async function seedDemo({
   await ensure(
     "project",
     { name: "Proven" },
-    { url: "https://proven-zeta.vercel.app", description: "Identitas profesional terverifikasi." },
+    { url: "https://proven-id.vercel.app", description: "Identitas profesional terverifikasi." },
   );
   const achievement = await ensure(
     "achievement",
