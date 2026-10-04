@@ -17,7 +17,8 @@
     "db:seed": "tsx scripts/seed-demo.ts",
     "check:env": "tsx scripts/check-env.ts",
     "smoke:testnet": "tsx scripts/smoke-testnet.ts",
-    "coverage": "vitest run --coverage --coverage.include='src/**' --coverage.exclude='**/*.test.ts' --coverage.reporter=text-summary --coverage.reporter=json-summary"
+    "coverage": "vitest run --coverage --coverage.include='src/**' --coverage.exclude='**/*.test.ts' --coverage.reporter=text-summary --coverage.reporter=json-summary",
+    "data:heal": "tsx scripts/heal-showcase.ts"
   },
   "dependencies": {
     "@fastify/cookie": "9.4.0",

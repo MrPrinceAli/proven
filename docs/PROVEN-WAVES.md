@@ -388,7 +388,7 @@ Tugas — API:
    Kembalikan headline, summary, entitas beserta status, DID terpotong. Jangan pernah kembalikan email, storage_key,
    atau isi evidence.
 5. Test: hash deterministik & sama dengan hash file asli; file 4 MB+1 ditolak 413; file .exe berganti nama .pdf ditolak;
-   evidence user lain → 404; download memverifikasi integritas; profil private → 404 publik; slug "Rina" vs "rina" konflik;
+   evidence user lain → 404; download memverifikasi integritas; profil private → 404 publik; slug "Arya" vs "arya" konflik;
    link evidence mengubah status ke EVIDENCE_ATTACHED.
 
 Tugas — UI (packages/ui + apps/web):

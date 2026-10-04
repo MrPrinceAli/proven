@@ -26,7 +26,7 @@ describe.skipIf(!hasDatabase)("GET /p/:slug (FR-14)", () => {
       method: "PATCH",
       url: "/me/profile",
       cookies: user.cookies,
-      payload: { slug: "rina", headline: "Smart Contract Engineer", summary: "Halo", visibility },
+      payload: { slug: "arya", headline: "Smart Contract Engineer", summary: "Halo", visibility },
     });
     return user;
   }
@@ -44,11 +44,11 @@ describe.skipIf(!hasDatabase)("GET /p/:slug (FR-14)", () => {
       payload: { entityType: "achievement", entityId: achievement.id },
     });
 
-    const res = await app.inject({ method: "GET", url: "/p/RINA" });
+    const res = await app.inject({ method: "GET", url: "/p/ARYA" });
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body).toMatchObject({
-      slug: "rina",
+      slug: "arya",
       displayName: "",
       avatarSeed: expect.any(String),
       headline: "Smart Contract Engineer",
@@ -67,19 +67,19 @@ describe.skipIf(!hasDatabase)("GET /p/:slug (FR-14)", () => {
 
   it("returns 404 for a private profile", async () => {
     await publicUser("private");
-    const res = await app.inject({ method: "GET", url: "/p/rina" });
+    const res = await app.inject({ method: "GET", url: "/p/arya" });
     expect(res.statusCode).toBe(404);
   });
 
   it("returns 404 for recruiter-only (roadmap) and unknown slugs", async () => {
     await publicUser("recruiter-only");
-    expect((await app.inject({ method: "GET", url: "/p/rina" })).statusCode).toBe(404);
+    expect((await app.inject({ method: "GET", url: "/p/arya" })).statusCode).toBe(404);
     expect((await app.inject({ method: "GET", url: "/p/nobody" })).statusCode).toBe(404);
   });
 
   it("returns 404 for a suspended user", async () => {
     const { userId } = await publicUser();
     await testPrisma().user.update({ where: { id: userId }, data: { status: "suspended" } });
-    expect((await app.inject({ method: "GET", url: "/p/rina" })).statusCode).toBe(404);
+    expect((await app.inject({ method: "GET", url: "/p/arya" })).statusCode).toBe(404);
   });
 });

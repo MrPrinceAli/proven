@@ -152,6 +152,7 @@ export async function seedDemo({
           metadata: {
             title: "Sertifikat Juara XYZ Hackathon 2026",
             filename: CERT_FILE,
+            recipient: persona.displayName,
             iv: sealed.iv,
             tag: sealed.tag,
             custody: [
@@ -169,6 +170,8 @@ export async function seedDemo({
       });
       return row;
     });
+  } else {
+    evidence = await refreshCertificate(prisma, evidenceKey, issuer.name, evidence, persona.displayName);
   }
 
   for (const [type, entityId] of [
@@ -218,4 +221,71 @@ export async function seedDemo({
     slug: slugTaken ? null : slug,
     evidenceSha256: Buffer.from(evidence.sha256).toString("hex"),
   };
+}
+
+type EvidenceRow = Awaited<ReturnType<PrismaClient["evidence"]["findFirstOrThrow"]>>;
+type CertificateMeta = { recipient?: string; custody?: unknown[]; [k: string]: unknown };
+
+/**
+ * Re-issues the example certificate PDF when it names someone other than the profile's persona
+ * (D-034: the showcase used to be "@rina-demo"). Same evidence row, so links and verification
+ * requests stay intact; the new hash is appended to the chain of custody and audited. Idempotent.
+ */
+export async function refreshCertificate(
+  prisma: PrismaClient,
+  evidenceKey: Buffer,
+  issuerName: string,
+  evidence: EvidenceRow,
+  recipient: string,
+): Promise<EvidenceRow> {
+  const meta = evidence.metadata as CertificateMeta;
+  if (meta.recipient === recipient) return evidence;
+  const pdf = await certificatePdf(issuerName, recipient);
+  const digest = sha256(pdf);
+  const sealed = encrypt(evidenceKey, pdf);
+  return prisma.$transaction(async (tx) => {
+    const storageKey = await postgresEvidenceStore.put(tx, sealed.ciphertext);
+    await postgresEvidenceStore.delete(tx, evidence.storageKey);
+    const now = new Date().toISOString();
+    const row = await tx.evidence.update({
+      where: { id: evidence.id },
+      data: {
+        storageKey,
+        sha256: digest,
+        sizeBytes: pdf.length,
+        metadata: {
+          ...meta,
+          recipient,
+          iv: sealed.iv,
+          tag: sealed.tag,
+          custody: [
+            ...(meta.custody ?? []),
+            { event: "regenerated", at: now, by: "system", sha256: digest.toString("hex") },
+          ],
+        } as Prisma.InputJsonValue,
+      },
+    });
+    await audit(tx, {
+      actorType: "system",
+      action: "evidence.regenerated",
+      entityType: "evidence",
+      entityId: row.id,
+      before: { sha256: Buffer.from(evidence.sha256).toString("hex") },
+      after: { sha256: digest.toString("hex"), size: pdf.length, recipient, source: "seed" },
+    });
+    return row;
+  });
+}
+
+/** Deploy-time repair: give the showcase (by slug) a certificate that names its persona. */
+export async function healShowcase(prisma: PrismaClient, evidenceKey: Buffer, issuerName: string) {
+  const profile = await prisma.profile.findFirst({ where: { slug: SHOWCASE.slug } });
+  if (!profile) return { changed: false, reason: "no showcase profile" };
+  const evidence = (await prisma.evidence.findMany({ where: { userId: profile.userId } })).find(
+    (e) => (e.metadata as { filename?: string }).filename === CERT_FILE,
+  );
+  if (!evidence) return { changed: false, reason: "no certificate" };
+  const recipient = profile.displayName || SHOWCASE.displayName;
+  const after = await refreshCertificate(prisma, evidenceKey, issuerName, evidence, recipient);
+  return { changed: after.storageKey !== evidence.storageKey, reason: "ok" };
 }

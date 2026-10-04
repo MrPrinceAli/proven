@@ -12,7 +12,7 @@ const me: Me = {
     headline: "Engineer",
     summary: "Halo",
     visibility: "public",
-    slug: "rina",
+    slug: "arya",
     updatedAt: "",
   },
   roles: ["user"],
@@ -63,7 +63,7 @@ const requests = [
 describe("CV model", () => {
   it("marks only issuer-verified claims and drops revoked ones", () => {
     const cv = cvFromProfile(me, claims, requests, "https://proven.test");
-    expect(cv.name).toBe("@rina");
+    expect(cv.name).toBe("@arya");
     const achievements = cv.sections.find((s) => s.title === "Prestasi")!;
     expect(achievements.items).toEqual([
       { text: "Juara 1", sub: "XYZ · 2026", verifyUrl: "https://proven.test/verify/urn%3Auuid%3Ac1" },
