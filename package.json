@@ -15,9 +15,13 @@
     "format:check": "prettier --check .",
     "test:contracts": "pnpm --filter @proven/contracts forge:test",
     "db:migrate": "pnpm --filter @proven/db migrate:deploy",
-    "db:seed": "pnpm --filter @proven/db seed",
+    "db:seed": "pnpm --filter @proven/api db:seed",
     "contracts:deploy:local": "pnpm --filter @proven/contracts deploy:local",
-    "ai:eval": "pnpm --filter @proven/ai ai:eval"
+    "ai:eval": "pnpm --filter @proven/ai ai:eval",
+    "check:env": "pnpm --filter @proven/api check:env",
+    "smoke:testnet": "pnpm --filter @proven/api smoke:testnet",
+    "e2e": "pnpm --filter @proven/web e2e",
+    "coverage": "pnpm --filter @proven/api --filter @proven/vc --filter @proven/ai coverage && pnpm --filter @proven/contracts coverage"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "7.18.0",

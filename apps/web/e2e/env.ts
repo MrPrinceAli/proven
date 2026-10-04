@@ -10,6 +10,12 @@ const deployments = JSON.parse(
 export const E2E_PORT = 3100;
 export const E2E_ORIGIN = `http://localhost:${E2E_PORT}`;
 // Anvil default key #1 — public test key, registered as issuer by deploy-local.sh.
+export const ACCOUNTS = {
+  /** Anvil #1: the relay issuer registered by deploy-local.sh. */
+  issuer: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+  /** Anvil #3: the demo user driven through the UI by the mock wallet. */
+  user: "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+} as const;
 export const ISSUER_KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d" as const;
 
 export const e2eEnv: Record<string, string> = {
@@ -33,4 +39,5 @@ export const e2eEnv: Record<string, string> = {
   NEXT_PUBLIC_RPC_URL: "http://127.0.0.1:8545",
   NEXT_PUBLIC_REGISTRY_ADDRESS: deployments.credentialRegistry,
   NEXT_PUBLIC_EXPLORER_URL: "",
+  NEXT_PUBLIC_E2E: "1",
 };
