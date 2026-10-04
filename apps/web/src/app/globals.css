@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 body {
-  background-color: #f4f2ee;
-  color: #1f2937;
+  @apply bg-canvas text-ink;
+}
+
+:focus-visible {
+  outline-color: theme("colors.brand.700");
 }

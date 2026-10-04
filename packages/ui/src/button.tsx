@@ -1,16 +1,16 @@
 import type { ButtonHTMLAttributes } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-emerald-700 text-white hover:bg-emerald-800 focus-visible:outline-emerald-700",
-  secondary:
-    "border border-emerald-700 text-emerald-700 hover:bg-emerald-50 focus-visible:outline-emerald-700",
-  ghost: "text-gray-700 hover:bg-gray-100 focus-visible:outline-gray-700",
+  primary: "bg-brand-700 text-white hover:bg-brand-800 focus-visible:outline-brand-700",
+  secondary: "border border-brand-700 text-brand-700 hover:bg-brand-50 focus-visible:outline-brand-700",
+  ghost: "text-muted hover:bg-gray-100 focus-visible:outline-gray-700",
+  danger: "border border-red-700 text-red-700 hover:bg-red-50 focus-visible:outline-red-700",
 };
 
 export function buttonClasses(variant: ButtonVariant = "primary", extra?: string): string {

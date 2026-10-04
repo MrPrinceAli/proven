@@ -25,10 +25,9 @@ const VerifyBody = z.object({
 
 export const didFor = (chainId: number, address: string) => `did:ethr:${chainId}:${address.toLowerCase()}`;
 
-const authRateLimit = { rateLimit: { max: 20, timeWindow: "1 minute" } };
-
 export async function authRoutes(app: FastifyInstance) {
   const { config, prisma } = app;
+  const authRateLimit = { rateLimit: { max: app.authRateLimit, timeWindow: "1 minute" } };
   const publicClient = createPublicClient({ transport: http(config.rpcUrl) });
 
   /** EOA signatures are checked locally; smart-contract wallets fall back to ERC-1271/6492 via RPC. */

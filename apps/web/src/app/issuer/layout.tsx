@@ -1,14 +1,11 @@
 import type { ReactNode } from "react";
-import { AppHeader } from "@/components/AppHeader";
+import { AppShell } from "@/components/AppShell";
 import { RequireAuth } from "@/components/RequireAuth";
 
 export default function IssuerLayout({ children }: { children: ReactNode }) {
   return (
-    <>
-      <AppHeader />
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        <RequireAuth role="issuer">{children}</RequireAuth>
-      </main>
-    </>
+    <RequireAuth role="issuer">
+      <AppShell wide>{children}</AppShell>
+    </RequireAuth>
   );
 }

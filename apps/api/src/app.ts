@@ -1,18 +1,23 @@
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
+import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import { getPrisma, type PrismaClient } from "@proven/db";
 import { loadConfig, type Config } from "./config";
 import { problem, registerProblemHandlers } from "./problem";
 import { authRoutes } from "./routes/auth";
+import { claimRoutes } from "./routes/claims";
+import { evidenceRoutes, MAX_EVIDENCE_BYTES } from "./routes/evidence";
 import { meRoutes } from "./routes/me";
+import { publicRoutes } from "./routes/public";
 
 declare module "fastify" {
   interface FastifyInstance {
     config: Config;
     prisma: PrismaClient;
+    authRateLimit: number;
   }
 }
 
@@ -22,6 +27,8 @@ export interface BuildAppOptions {
   config?: Config;
   /** Defaults to the process-wide client. */
   prisma?: PrismaClient;
+  /** Requests per minute per IP: global and for the SIWE endpoints. */
+  rateLimit?: { max?: number; authMax?: number };
 }
 
 /**
@@ -41,6 +48,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   app.decorate("config", config);
   app.decorate("prisma", prisma);
+  app.decorate("authRateLimit", options.rateLimit?.authMax ?? 20);
   registerProblemHandlers(app);
 
   await app.register(helmet);
@@ -48,15 +56,22 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(cookie, { secret: config.sessionSecret });
   // In-memory store: limits are per function instance on Vercel (best effort).
   await app.register(rateLimit, {
-    max: 300,
+    max: options.rateLimit?.max ?? 300,
     timeWindow: "1 minute",
     errorResponseBuilder: (_request, context) =>
       problem(429, "rate-limited", `Rate limit exceeded, retry in ${context.after}`),
   });
 
+  await app.register(multipart, {
+    limits: { fileSize: MAX_EVIDENCE_BYTES, files: 1, fields: 10, fieldSize: 4096 },
+  });
+
   app.get("/health", async () => ({ status: "ok" }));
   await app.register(authRoutes);
   await app.register(meRoutes);
+  await app.register(claimRoutes);
+  await app.register(evidenceRoutes);
+  await app.register(publicRoutes);
 
   return app;
 }
