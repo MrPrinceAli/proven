@@ -207,7 +207,8 @@ export async function verificationRoutes(app: FastifyInstance) {
         ...(request.auth!.via === "demo" ? { requester: { authProvider: "demo" } } : {}),
       },
       include: { requester: { include: { wallets: true, profile: true } } },
-      orderBy: { createdAt: "asc" },
+      // Demo issuers see the newest sandbox first — usually the visitor's own (D-032).
+      orderBy: { createdAt: request.auth!.via === "demo" ? "desc" : "asc" },
     });
     return Promise.all(
       rows.map(async (r) => ({
