@@ -9,6 +9,7 @@ import {
   IconPaperclip,
   IconPencil,
   IconPlus,
+  IconShield,
   IconTrash,
   IconUsers,
   SectionCard,
@@ -20,6 +21,7 @@ import { ApiError } from "@/lib/api";
 import { isEditable, type ClaimPath, type KindDef } from "@/lib/claims";
 import { useDeleteClaim } from "@/lib/queries";
 import { ClaimFormDialog } from "./ClaimFormDialog";
+import { RequestVerificationDialog } from "./RequestVerificationDialog";
 
 export const KIND_ICONS: Record<ClaimPath, ComponentType<{ className?: string }>> = {
   experiences: IconBriefcase,
@@ -43,6 +45,7 @@ export function ClaimSection({
 }) {
   const Icon = KIND_ICONS[kind.path];
   const [editing, setEditing] = useState<Item | "new" | null>(null);
+  const [requesting, setRequesting] = useState<Item | null>(null);
   const remove = useDeleteClaim(kind.path);
   const toast = useToast();
 
@@ -103,6 +106,15 @@ export function ClaimSection({
                     <IconPaperclip className="h-3.5 w-3.5" />
                     {evidenceCount > 0 ? `${evidenceCount} bukti terlampir` : "Belum ada bukti"}
                   </p>
+                  {editable && item.status === "EVIDENCE_ATTACHED" && (
+                    <button
+                      type="button"
+                      onClick={() => setRequesting(item)}
+                      className="mt-2 inline-flex items-center gap-1 rounded-full border border-brand-700 px-3 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+                    >
+                      <IconShield className="h-3.5 w-3.5" /> Minta verifikasi
+                    </button>
+                  )}
                 </div>
                 {editable && (
                   <div className="flex shrink-0 items-start gap-1">
@@ -131,6 +143,17 @@ export function ClaimSection({
             );
           })}
         </ul>
+      )}
+      {editable && requesting && (
+        <RequestVerificationDialog
+          entityType={kind.entityType}
+          entityId={requesting.id}
+          label={kind.primary(requesting)}
+          linkedEvidenceIds={
+            Array.isArray(requesting.evidenceIds) ? (requesting.evidenceIds as string[]) : []
+          }
+          onClose={() => setRequesting(null)}
+        />
       )}
       {editable && editing && (
         <ClaimFormDialog

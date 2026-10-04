@@ -6,6 +6,7 @@ import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import { getPrisma, type PrismaClient } from "@proven/db";
 import { chainFromConfig, type ChainAdapter } from "./chain/adapter";
+import { bootstrapIssuer } from "./issuers/register";
 import { loadConfig, type Config } from "./config";
 import { problem, registerProblemHandlers } from "./problem";
 import { authRoutes } from "./routes/auth";
@@ -13,6 +14,7 @@ import { claimRoutes } from "./routes/claims";
 import { evidenceRoutes, MAX_EVIDENCE_BYTES } from "./routes/evidence";
 import { meRoutes } from "./routes/me";
 import { publicRoutes } from "./routes/public";
+import { verificationRoutes } from "./routes/verification";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -56,6 +58,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   app.decorate("authRateLimit", options.rateLimit?.authMax ?? 20);
   app.decorate("chain", options.chain === undefined ? chainFromConfig(config, prisma) : options.chain);
   registerProblemHandlers(app);
+  if (config.issuer) await bootstrapIssuer(prisma, config.issuer);
 
   await app.register(helmet);
   await app.register(cors, { origin: config.allowedOrigins, credentials: true });
@@ -78,6 +81,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(claimRoutes);
   await app.register(evidenceRoutes);
   await app.register(publicRoutes);
+  await app.register(verificationRoutes);
 
   return app;
 }

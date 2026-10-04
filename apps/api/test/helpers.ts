@@ -80,6 +80,8 @@ export async function resetDatabase(prisma = testPrisma()) {
 export const newAccount = () => privateKeyToAccount(generatePrivateKey());
 
 export interface SiweOverrides {
+  /** Chain used when requesting the nonce (defaults to TEST_CHAIN_ID). */
+  nonceChainId?: number;
   domain?: string;
   uri?: string;
   chainId?: number;
@@ -96,7 +98,9 @@ export async function signIn(
   account: PrivateKeyAccount,
   overrides: SiweOverrides & { nonce?: string } = {},
 ): Promise<{ response: LightMyRequestResponse; message: string; signature: string }> {
-  const nonce = overrides.nonce ?? (await requestNonce(app, account.address)).json().nonce;
+  const nonce =
+    overrides.nonce ??
+    (await requestNonce(app, account.address, overrides.nonceChainId ?? TEST_CHAIN_ID)).json().nonce;
   const message = createSiweMessage({
     address: overrides.address ?? account.address,
     chainId: overrides.chainId ?? TEST_CHAIN_ID,
@@ -124,8 +128,12 @@ export function sessionCookie(response: LightMyRequestResponse): Record<string, 
 }
 
 /** Signs in a fresh wallet and returns its session cookie. */
-export async function loginAs(app: FastifyInstance, account: PrivateKeyAccount = newAccount()) {
-  const { response } = await signIn(app, account);
+export async function loginAs(
+  app: FastifyInstance,
+  account: PrivateKeyAccount = newAccount(),
+  chainId: number = TEST_CHAIN_ID,
+) {
+  const { response } = await signIn(app, account, { chainId, nonceChainId: chainId });
   if (response.statusCode !== 200) throw new Error(`login failed: ${response.body}`);
   return { account, cookies: sessionCookie(response), userId: response.json().userId as string };
 }

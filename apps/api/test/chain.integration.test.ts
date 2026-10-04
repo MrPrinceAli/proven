@@ -1,5 +1,3 @@
-import { existsSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import {
   buildAchievementVC,
   credentialHash,
@@ -8,47 +6,18 @@ import {
   subjectRef,
   verifyVC,
 } from "@proven/vc";
-import type { Address } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { afterAll, describe, expect, it } from "vitest";
 import { createChainAdapter } from "../src/chain/adapter";
 import { ProblemError } from "../src/problem";
-import { hasDatabase, testPrisma } from "./helpers";
+import { ANVIL_KEYS, ANVIL_RPC, anvilReady, deployment } from "./anvil";
+import { testPrisma } from "./helpers";
 
-// Requires `anvil` + `pnpm contracts:deploy:local` (the CI build job does both).
-const RPC = process.env.ANVIL_RPC_URL ?? "http://127.0.0.1:8545";
-const deploymentsFile = fileURLToPath(
-  new URL("../../../packages/contracts/deployments/31337.json", import.meta.url),
-);
-// Anvil default key #1: the issuer registered by deploy-local.sh. Public test key, never used on a real chain.
-const ISSUER_KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d" as const;
-
-async function anvilReady(): Promise<boolean> {
-  if (!existsSync(deploymentsFile)) return false;
-  try {
-    const res = await fetch(RPC, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_chainId", params: [] }),
-    });
-    return (await res.json()).result === "0x7a69";
-  } catch {
-    return false;
-  }
-}
-
-const ready = hasDatabase && (await anvilReady());
-if (process.env.REQUIRE_ANVIL && !ready) {
-  throw new Error("REQUIRE_ANVIL is set but Anvil, deployments/31337.json or DATABASE_URL_TEST is missing");
-}
+const RPC = ANVIL_RPC;
+const ISSUER_KEY = ANVIL_KEYS.issuer;
+const ready = anvilReady;
 
 describe.skipIf(!ready)("chain adapter against Anvil (hash parity)", () => {
-  const deployment = ready
-    ? (JSON.parse(readFileSync(deploymentsFile, "utf8")) as {
-        credentialRegistry: Address;
-        issuerRegistry: Address;
-      })
-    : { credentialRegistry: "0x0" as Address, issuerRegistry: "0x0" as Address };
   const issuer = privateKeyToAccount(ISSUER_KEY);
   const chain = createChainAdapter({
     chainId: 31337,
@@ -159,7 +128,7 @@ describe.skipIf(!ready)("chain adapter against Anvil (hash parity)", () => {
       registryAddress: deployment.credentialRegistry,
       issuerRegistryAddress: deployment.issuerRegistry,
       // Anvil default key #3: not a registered issuer.
-      issuerPrivateKey: "0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6",
+      issuerPrivateKey: ANVIL_KEYS.stranger,
       prisma: testPrisma(),
     });
     const vc = newVc();

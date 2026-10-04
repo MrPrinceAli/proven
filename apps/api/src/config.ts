@@ -1,4 +1,5 @@
 import { getAddress, isAddress } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 
 const eip55Address = z
@@ -47,6 +48,18 @@ const EnvSchema = z.object({
     .refine((v) => v === undefined || /^0x[0-9a-fA-F]{64}$/.test(v), {
       message: "must be a 0x-prefixed 32-byte hex key",
     }),
+  // Single MVP issuer whose key the backend holds (§S1.3). Bootstrapped into `issuers` at startup (D-025).
+  ISSUER_ADDRESS: optionalAddress,
+  ISSUER_NAME: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? v : undefined)),
+  ISSUER_DID: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? v : undefined)),
   REGISTRY_ADDRESS: optionalAddress,
   ISSUER_REGISTRY_ADDRESS: optionalAddress,
   CREDENTIAL_SBT_ADDRESS: optionalAddress,
@@ -68,6 +81,8 @@ export interface Config {
   adminAddresses: string[];
   /** Server-only issuer key (golden rule #4); never logged or returned. */
   issuerPrivateKey?: `0x${string}`;
+  /** The relay issuer (address, name, DID) when ISSUER_ADDRESS + ISSUER_NAME are set. */
+  issuer?: { address: `0x${string}`; name: string; did: string };
   registryAddress?: `0x${string}`;
   issuerRegistryAddress?: `0x${string}`;
   credentialSbtAddress?: `0x${string}`;
@@ -87,6 +102,24 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     throw new Error(`Invalid environment: ${issues}`);
   }
   const e = parsed.data;
+
+  let issuer: Config["issuer"];
+  if (e.ISSUER_ADDRESS && e.ISSUER_NAME) {
+    const did = e.ISSUER_DID ?? `did:ethr:${e.CHAIN_ID}:${e.ISSUER_ADDRESS.toLowerCase()}`;
+    if (did !== `did:ethr:${e.CHAIN_ID}:${e.ISSUER_ADDRESS.toLowerCase()}`) {
+      throw new Error(
+        "Invalid environment: ISSUER_DID must be did:ethr:{CHAIN_ID}:{ISSUER_ADDRESS lowercase}",
+      );
+    }
+    issuer = { address: e.ISSUER_ADDRESS, name: e.ISSUER_NAME, did };
+  }
+  if (
+    issuer &&
+    e.ISSUER_PRIVATE_KEY &&
+    privateKeyToAccount(e.ISSUER_PRIVATE_KEY as `0x${string}`).address !== issuer.address
+  ) {
+    throw new Error("Invalid environment: ISSUER_PRIVATE_KEY does not belong to ISSUER_ADDRESS");
+  }
 
   const allowedDomains = [
     ...new Set(
@@ -112,6 +145,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     evidenceKey: Buffer.from(e.EVIDENCE_ENC_KEY, "base64"),
     adminAddresses: e.ADMIN_ADDRESSES,
     issuerPrivateKey: e.ISSUER_PRIVATE_KEY as `0x${string}` | undefined,
+    issuer,
     registryAddress: e.REGISTRY_ADDRESS,
     issuerRegistryAddress: e.ISSUER_REGISTRY_ADDRESS,
     credentialSbtAddress: e.CREDENTIAL_SBT_ADDRESS,
