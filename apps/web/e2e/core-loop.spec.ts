@@ -18,7 +18,8 @@ async function loginAs(page: Page, account: string) {
   if (await dashboard.isVisible().catch(() => false)) {
     // A session from the previous account is still active: log out first.
     await dashboard.click();
-    await page.getByRole("button", { name: "Keluar" }).click();
+    await page.getByRole("button", { name: "Menu akun" }).click();
+    await page.getByRole("menuitem", { name: "Keluar" }).click();
     await page.waitForURL("/");
   }
   await page.getByRole("button", { name: "Masuk dengan wallet" }).click();
@@ -26,7 +27,8 @@ async function loginAs(page: Page, account: string) {
 }
 
 async function logout(page: Page) {
-  await page.getByRole("button", { name: "Keluar" }).click();
+  await page.getByRole("button", { name: "Menu akun" }).click();
+  await page.getByRole("menuitem", { name: "Keluar" }).click();
   await page.waitForURL("/");
 }
 

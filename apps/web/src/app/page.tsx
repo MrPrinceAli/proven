@@ -33,15 +33,59 @@ export default function HomePage() {
         <header className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo tone="dark" />
           <nav aria-label="Utama" className="flex items-center gap-1">
-            <a href="#cara-kerja" className={`${NAV_LINK} hidden sm:inline-flex`}>
+            <a href="#cara-kerja" className={`${NAV_LINK} hidden md:inline-flex`}>
               Cara kerja
             </a>
-            <Link href={`/p/${site.showcaseSlug}`} className={`${NAV_LINK} hidden sm:inline-flex`}>
+            <Link href={`/p/${site.showcaseSlug}`} className={`${NAV_LINK} hidden md:inline-flex`}>
               Contoh profil
             </Link>
-            <Link href="/verify" className={NAV_LINK}>
+            <Link href="/verify" className={`${NAV_LINK} hidden md:inline-flex`}>
               Verifikasi kredensial
             </Link>
+            {me ? (
+              <Link href="/dashboard" className={buttonClasses("inverse", "ml-2")}>
+                Dashboard
+              </Link>
+            ) : (
+              <a href="#mulai" className={buttonClasses("inverse", "ml-2")}>
+                Mulai
+              </a>
+            )}
+            <details className="group relative md:hidden">
+              <summary
+                aria-label="Menu"
+                className="ml-1 flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-white/80 hover:bg-white/10 [&::-webkit-details-marker]:hidden"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" className="group-open:hidden" />
+                  <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" className="hidden group-open:block" />
+                </svg>
+              </summary>
+              <div className="absolute right-0 top-full z-40 mt-2 flex w-56 flex-col rounded-2xl border border-white/10 bg-brand-950/95 p-2 shadow-2xl backdrop-blur">
+                <a
+                  href="#cara-kerja"
+                  className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
+                >
+                  Cara kerja
+                </a>
+                <Link
+                  href={`/p/${site.showcaseSlug}`}
+                  className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10"
+                >
+                  Contoh profil
+                </Link>
+                <Link href="/verify" className="rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/10">
+                  Verifikasi kredensial
+                </Link>
+              </div>
+            </details>
           </nav>
         </header>
 
@@ -71,7 +115,7 @@ export default function HomePage() {
               bisa dicek siapa saja, kapan saja.
             </p>
 
-            <div className="mt-7 flex flex-wrap items-start gap-3">
+            <div id="mulai" className="mt-7 flex scroll-mt-24 flex-wrap items-start gap-3">
               {me ? (
                 <Link href="/dashboard" className={buttonClasses("inverse", "h-11 px-6")}>
                   Buka dashboard

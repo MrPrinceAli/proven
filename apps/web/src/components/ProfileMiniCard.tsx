@@ -33,6 +33,14 @@ export function ProfileMiniCard() {
         <p className="mt-2 font-mono text-[11px] text-gray-500" title={me.wallet.did}>
           {shortDid(me.wallet.did)}
         </p>
+        {me.profile?.slug && me.profile.visibility === "public" && (
+          <Link
+            href={`/p/${me.profile.slug}`}
+            className="mt-3 rounded-full border border-brand-700 px-3 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+          >
+            Lihat profil publik
+          </Link>
+        )}
       </div>
       <dl className="border-t border-line px-4 py-3 text-xs">
         <div className="flex justify-between py-0.5">

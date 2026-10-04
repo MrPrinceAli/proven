@@ -1,4 +1,4 @@
-import { EmptyState } from "@proven/ui";
+import { buttonClasses, EmptyState } from "@proven/ui";
 import Link from "next/link";
 import { PublicHeader } from "@/components/PublicHeader";
 
@@ -9,11 +9,16 @@ export default function NotFound() {
       <main className="mx-auto max-w-xl px-4 py-16">
         <EmptyState
           title="Halaman tidak ditemukan"
-          description="Profil ini tidak ada atau tidak dibagikan secara publik."
+          description="Tautan ini salah, sudah dipindahkan, atau profilnya tidak dibagikan secara publik."
           action={
-            <Link href="/" className="text-sm font-semibold text-brand-700 hover:underline">
-              Kembali ke beranda
-            </Link>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link href="/" className={buttonClasses("primary")}>
+                Halaman utama
+              </Link>
+              <Link href="/verify" className={buttonClasses("secondary")}>
+                Verifikasi kredensial
+              </Link>
+            </div>
           }
         />
       </main>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, IconAward, IconCopy, IconLink, StatusBadge, useToast } from "@proven/ui";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { credentialBadge, shortHash, txUrl } from "@/lib/explorer";
 import type { CredentialView } from "@/lib/queries";
@@ -70,12 +71,12 @@ export function CredentialCard({ credential, actions }: { credential: Credential
           </>
         )}
       </dl>
-      <a
+      <Link
         href={`/verify/${encodeURIComponent(credential.credentialId)}`}
         className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
       >
         <IconLink className="h-4 w-4" /> Halaman verifikasi publik
-      </a>
+      </Link>
     </Card>
   );
 }

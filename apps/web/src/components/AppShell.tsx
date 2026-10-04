@@ -1,23 +1,14 @@
 "use client";
 
-import {
-  Avatar,
-  IconAward,
-  IconFile,
-  IconHome,
-  IconLogout,
-  IconSearch,
-  IconShield,
-  IconSparkles,
-  IconUser,
-} from "@proven/ui";
+import { IconAward, IconFile, IconHome, IconShield, IconSparkles, IconUser } from "@proven/ui";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { useLogout, useSession } from "@/lib/session";
+import { useSession } from "@/lib/session";
+import { AccountMenu } from "./AccountMenu";
+import { BrandMark } from "./BrandMark";
 import { DemoBanner } from "./DemoBanner";
-import { avatarUri } from "@/lib/avatar";
-import { avatarLabel } from "./identity";
+import { ProfileJump } from "./ProfileJump";
 import { ProfileMiniCard } from "./ProfileMiniCard";
 import { StatusLegend } from "./StatusLegend";
 
@@ -32,9 +23,7 @@ const NAV = [
 /** Professional-network layout (D-012): sticky top nav, 3 columns on desktop, bottom nav on mobile. */
 export function AppShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: me } = useSession();
-  const logout = useLogout();
   const nav = me?.roles.includes("issuer")
     ? [...NAV, { href: "/issuer", label: "Issuer", icon: IconShield }]
     : NAV;
@@ -52,22 +41,12 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
       <header className="sticky top-0 z-30 border-b border-line bg-white">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <Link href="/dashboard" className="flex items-center gap-2" aria-label="Proven-ID — Beranda">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-brand-700 text-white shadow-sm ring-1 ring-black/5">
-              <IconShield className="h-5 w-5" />
-            </span>
+            <BrandMark size={32} />
             <span className="hidden text-lg font-bold tracking-tight text-brand-950 sm:inline">
               Proven-ID
             </span>
           </Link>
-          <label className="relative hidden max-w-xs flex-1 md:block">
-            <span className="sr-only">Cari profil</span>
-            <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-            <input
-              disabled
-              placeholder="Cari profil (segera hadir)"
-              className="w-full rounded-md bg-[#EEF3F8] py-1.5 pl-9 pr-3 text-sm placeholder:text-gray-500"
-            />
-          </label>
+          <ProfileJump />
           <nav aria-label="Navigasi utama" className="ml-auto hidden md:flex">
             {nav.map(({ href, label, icon: Icon }) => (
               <Link
@@ -85,24 +64,7 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
               </Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-1 md:ml-2">
-            {me?.wallet && (
-              <Avatar
-                seed={me.profile?.avatarSeed ?? me.wallet.address}
-                label={avatarLabel(me.profile?.displayName, me.profile?.slug, me.wallet.did)}
-                src={me.profile?.avatarSeed ? avatarUri(me.profile.avatarSeed) : undefined}
-                size={32}
-              />
-            )}
-            <button
-              type="button"
-              onClick={() => logout.mutate(undefined, { onSettled: () => router.push("/") })}
-              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted hover:bg-gray-100 hover:text-ink"
-            >
-              <IconLogout className="h-4 w-4" />
-              Keluar
-            </button>
-          </div>
+          <div className="ml-auto flex items-center gap-1 md:ml-2">{me && <AccountMenu me={me} />}</div>
         </div>
       </header>
       <DemoBanner />

@@ -42,7 +42,12 @@ export default function CredentialsPage() {
         <ul className="divide-y divide-line">
           {requests.data?.map((r) => (
             <li key={r.id} className="flex flex-wrap items-center gap-2 py-3 text-sm">
-              <span className="font-medium text-ink">{r.claim.label}</span>
+              <Link
+                href="/dashboard/profile"
+                className="font-medium text-ink hover:text-brand-700 hover:underline"
+              >
+                {r.claim.label}
+              </Link>
               <Badge className={STATE_LABEL[r.state].className}>{STATE_LABEL[r.state].text}</Badge>
               <span className="text-muted">
                 → {r.issuer.name} · {dateFormat.format(new Date(r.createdAt))}
