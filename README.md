@@ -6,43 +6,67 @@ Proven mengubah klaim profesional (skill, pengalaman, proyek, prestasi, komunita
 diverifikasi siapa saja: **CLAIM → EVIDENCE → VERIFICATION → CREDENTIAL + PROOF → PROVEN**.
 Dibangun untuk BNB Hackathon (Indonesia Web3 Hackathon Bali, track Consumer Apps).
 
-Rencana kerja & spesifikasi lengkap: [`docs/PROVEN-WAVES.md`](docs/PROVEN-WAVES.md) · keputusan: [`docs/DECISIONS.md`](docs/DECISIONS.md) · progres: [`docs/PROGRESS.md`](docs/PROGRESS.md).
+- **Demo:** https://proven-zeta.vercel.app · verifikasi: `/verify` · profil contoh: `/p/rina-demo`
+- **Dokumen:** [rencana & spesifikasi](docs/PROVEN-WAVES.md) · [keputusan](docs/DECISIONS.md) · [progres](docs/PROGRESS.md) ·
+  [deploy BSC Testnet](docs/DEPLOY-BSC-TESTNET.md) · [naskah demo](docs/DEMO-SCRIPT.md)
+
+## Cara kerja
+
+| Langkah    | Yang terjadi                                                                                                                                                                                                                        |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Login**  | Sign-In with Ethereum (EIP-4361): tanda tangan gratis, nonce sekali pakai, sesi cookie HttpOnly. Identitas `did:ethr:97:<address>`.                                                                                                 |
+| **Create** | User mengisi profil ala LinkedIn dan mengunggah bukti (PDF/PNG/JPG ≤ 4 MB). SHA-256 dicatat, file dienkripsi AES-256-GCM, chain of custody diaudit.                                                                                 |
+| **Prove**  | User meminta verifikasi; issuer terdaftar meninjau bukti lalu menyetujui. Backend membangun VC W3C 2.0 / Open Badges, meng-anchor `sha256(JCS(vc))` ke `CredentialRegistry` di BNB Smart Chain Testnet, dan menandatangani EIP-712. |
+| **Share**  | Profil publik `/p/<slug>`, QR, CV PDF. `/verify/<id>` menampilkan status dari chain; **verifikasi independen** menghitung ulang hash di browser dan membaca blockchain langsung — tetap jalan walau server Proven mati.             |
+| **AI**     | Ringkasan, CV, tailoring lowongan, klasifikasi bukti, cek klaim — hanya dari data user, dengan guardrail deterministik. Skill tanpa bukti: _“Skill detected — evidence not found.”_ AI tidak pernah memberi status Terverifikasi.   |
+
+**Aturan emas:** tidak ada PII on-chain (hanya `bytes32`/`address`/`uint`/`bool`, diuji), AI tidak mengarang,
+issuer adalah otoritas, kunci privat hanya di server, hash kredensial deterministik, human-in-the-loop.
 
 ## Arsitektur (full cloud, tanpa Docker)
 
-| Bagian     | Layanan                                                                          |
-| ---------- | -------------------------------------------------------------------------------- |
-| Kode & CI  | GitHub + GitHub Actions (Postgres & Anvil jalan di runner CI)                    |
-| Web + API  | Vercel, satu project (`apps/web`). API Fastify (`apps/api`) dilayani di `/api/*` |
-| Database   | Neon Postgres (branch otomatis per preview)                                      |
-| Blockchain | BSC Testnet (chainId 97)                                                         |
-
 ```
-apps/web        Next.js 14 — UI user, issuer, verifier + route /api/[...path]
-apps/api        Fastify 4 — buildApp() + createWebHandler() untuk Next.js
-packages/vc     VC toolkit (W4)        packages/ai   LLM + guardrail (W6)
-packages/db     Prisma (W2)            packages/ui   design system "Ledger & Seal"
-packages/contracts  Foundry (W1)
+Browser ──► Vercel (Next.js 14, apps/web) ──► /api/* → Fastify (apps/api, in-process)
+                │                                   ├─► Neon Postgres (Prisma)
+                │                                   ├─► BNB Smart Chain Testnet (viem → CredentialRegistry, IssuerRegistry)
+                │                                   └─► Claude (opsional, @anthropic-ai/sdk) / mock
+                └── verifikasi independen ─────────────► RPC publik BSC Testnet (tanpa server Proven)
+GitHub Actions: CI (lint, typecheck, test + Postgres + Anvil, Foundry, Playwright E2E) · ops.yml (deploy, register, seed)
 ```
 
-## Alur kerja
+| Paket                | Isi                                                                               |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `apps/web`           | Next.js 14 App Router: user, issuer, verifier UI; route `/api/[...path]`          |
+| `apps/api`           | Fastify 4: SIWE, profil, evidence, issuer flow, verify, AI; chain adapter (viem)  |
+| `packages/contracts` | Foundry: `IssuerRegistry`, `CredentialRegistry`, `CredentialSBT` + ABI TypeScript |
+| `packages/vc`        | VC toolkit isomorphic: schema, JCS + SHA-256, EIP-712, `verifyVC`                 |
+| `packages/ai`        | LLM client (Claude/mock), prompt bervesi, guardrail, eval                         |
+| `packages/db`        | Prisma schema + migrasi (Postgres 16)                                             |
+| `packages/ui`        | Design system "Ledger & Seal" (tema hijau)                                        |
 
-1. Setiap gelombang dikerjakan di branch `wN-*` lalu dibuka PR.
-2. GitHub Actions menjalankan format check, lint, typecheck, test, dan build.
-3. Vercel membuat URL preview untuk PR tersebut — cek dari browser, lalu merge.
+## Kualitas
 
-## Pengembangan lokal (opsional)
+| Pemeriksaan                     | Hasil                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Kontrak (Foundry)               | 46 test, coverage 100%                                                                                  |
+| API (Vitest + Postgres + Anvil) | 118 test, coverage 96%                                                                                  |
+| VC toolkit                      | 19 test (golden vector), coverage 95%                                                                   |
+| AI guardrail                    | 17 test (dataset negatif, prompt injection), coverage 85%                                               |
+| Browser (Playwright)            | 12 test: core loop via UI, verifikasi independen tanpa API, VC diubah, revoke, privasi, No PII on-chain |
 
-Tidak wajib — semua bisa dicek lewat CI dan preview Vercel. Jika ingin menjalankan di laptop:
+## Pengembangan
 
-- Node 22 (`.nvmrc`) dan pnpm 9 (`corepack enable` atau `corepack pnpm …`)
-- Foundry hanya dibutuhkan untuk menyentuh `packages/contracts`
+Tidak wajib — semua bisa dicek lewat CI dan preview Vercel. Untuk menjalankan di laptop: Node 22, pnpm 9 (`corepack`),
+Foundry (untuk kontrak), Postgres 16 dan Anvil.
 
 ```bash
 pnpm install
-pnpm dev        # web http://localhost:3000, API di http://localhost:3000/api/health
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
+pnpm test:contracts                 # Foundry
+anvil & pnpm contracts:deploy:local # kontrak lokal
+DATABASE_URL_TEST=… pnpm e2e        # Playwright (butuh Anvil + Postgres)
+pnpm coverage
 ```
 
-Rahasia tidak pernah disimpan di repo atau laptop: isi di Vercel Environment Variables dan GitHub Secrets
-(daftar variabel: [`.env.example`](.env.example), lokasi tiap rahasia: `docs/PROVEN-WAVES.md` §S12.3).
+Setiap gelombang: branch `wN-*` → PR → GitHub Actions + preview Vercel → merge. Rahasia hanya di Vercel Environment
+Variables dan GitHub Secrets (daftar: [`.env.example`](.env.example)).

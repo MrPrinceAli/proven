@@ -11,8 +11,8 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 | W4 Mesin Kredensial | ✅ selesai — CI hijau | `w4-credential-engine` · PR #5 |
 | W5 Alur Issuer | ✅ selesai — CI hijau (demo testnet menunggu deploy kontrak) | `w5-issuer-flow` · PR #6 |
 | W6 AI Layer | ✅ selesai — CI hijau (AI asli opsional, butuh API key) | `w6-ai-layer` · PR #7 |
-| W7 Verifier & Output | ✅ selesai | `w7-verifier-output` |
-| W8 | ⏳ belum | — |
+| W7 Verifier & Output | ✅ selesai — CI hijau (termasuk E2E) | `w7-verifier-output` · PR #8 |
+| W8 Testnet, E2E & Demo | ✅ selesai (demo testnet menunggu langkah manual) | `w8-testnet-e2e-demo` |
 
 ---
 
@@ -204,3 +204,29 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 **Langkah manual untuk user**
 - Setelah kontrak di-deploy ke BSC Testnet: isi Vercel Env `NEXT_PUBLIC_REGISTRY_ADDRESS` (dibaca saat build — redeploy setelah mengisi) agar verifikasi independen aktif.
 - Uji QR dari HP memakai URL production (preview dilindungi login Vercel).
+
+---
+
+## W8 — BSC Testnet, E2E, Demo & Polish (2026-10-04)
+
+**Selesai**
+- Kesiapan testnet tanpa transaksi oleh Claude: `pnpm check:env` (diuji terhadap RPC BSC Testnet sungguhan), `pnpm smoke:testnet`, `docs/DEPLOY-BSC-TESTNET.md`; task `check-env`, `db-seed`, `smoke-testnet` di `ops.yml` (D-030).
+- Seed demo `pnpm db:seed` (idempotent, diuji): issuer XYZ Community, profil `/p/rina-demo`, pengalaman/proyek/komunitas, sertifikat PDF (pdf-lib, terenkripsi), skill Rust tanpa bukti, satu permintaan *pending* untuk approve live.
+- E2E Playwright core loop lewat UI dengan mock wallet Anvil: login → prestasi → upload → tautkan → minta verifikasi → issuer approve → user VERIFIED → `/verify` Aktif (+ independen) → revoke → Dicabut. Ditambah test sistem **No PII on-chain** (semua log kedua registry hanya `bytes32/address/uint/bool`, tanpa teks klaim/DID/nama issuer). Total Playwright: 12 test.
+- Polish: landing baru (tagline, Create → Prove → Share, AI jujur, tanpa PII on-chain), favicon, judul halaman, loading/empty state di semua halaman, pesan error dari problem+json.
+- README final, `docs/DEMO-SCRIPT.md` (naskah 3 menit), laporan coverage.
+
+**Coverage (`pnpm coverage`)**: API 96,2% · VC 95,3% · AI 85,0% · kontrak 100% (target ≥ 70%).
+
+**Status gerbang global (§S15)**: FR teruji ✅ · coverage ✅ · No PII on-chain (ABI + log) ✅ · output AI tervalidasi + no-fabrication ✅ · audit log + RFC 9457 ✅ · WCAG dasar ✅ · OpenAPI ⚠️ belum dibuat (lihat Tertunda).
+
+**Tertunda**
+- Dokumentasi OpenAPI 3.1 (§S9.1) belum digenerate.
+- Mint SBT (opsional W5) belum.
+- Demo di BSC Testnet menunggu langkah manual di bawah.
+
+**Langkah manual untuk user (urut)**
+1. Merge PR #1 → #8 dan PR W8 ke `main` (berurutan; PR bertumpuk).
+2. Ikuti `docs/DEPLOY-BSC-TESTNET.md`: 2 wallet + tBNB → GitHub Secrets → ops `deploy-contracts` → isi Vercel Env (issuer + alamat kontrak) → redeploy → ops `check-env` → ops `db-seed` → ops `smoke-testnet`.
+3. Opsional: `LLM_PROVIDER=anthropic` + `LLM_API_KEY` di Vercel untuk AI asli, lalu `pnpm ai:eval`.
+4. Latihan dengan `docs/DEMO-SCRIPT.md`; uji QR dari HP di `https://proven-zeta.vercel.app`.

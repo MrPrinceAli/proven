@@ -14,8 +14,7 @@
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:test": "node scripts/migrate-test.mjs",
-    "seed": "tsx prisma/seed.ts",
-    "lint": "eslint src prisma --ext .ts",
+    "lint": "eslint src scripts --ext .ts,.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node scripts/migrate-test.mjs && vitest run"
   },

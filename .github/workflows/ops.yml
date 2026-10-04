@@ -10,8 +10,19 @@ on:
         required: true
         type: choice
         options:
+          - check-env
           - deploy-contracts
           - issuer-register
+          - db-seed
+          - smoke-testnet
+      demo_user_address:
+        description: "db-seed: alamat wallet MetaMask yang dipakai login saat demo (EIP-55)"
+        required: false
+        type: string
+      demo_credential_hash:
+        description: "smoke-testnet: hash VC yang diperiksa (opsional)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -108,3 +119,75 @@ jobs:
         env:
           DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL }}
       - run: pnpm --filter @proven/api issuer:register
+
+  check-env:
+    if: inputs.task == 'check-env'
+    name: Checklist kesiapan BSC Testnet
+    runs-on: ubuntu-latest
+    env:
+      CHAIN_ID: "97"
+      BSC_TESTNET_RPC_URL: ${{ secrets.BSC_TESTNET_RPC_URL }}
+      ISSUER_ADDRESS: ${{ secrets.ISSUER_ADDRESS }}
+      ISSUER_DID: ${{ secrets.ISSUER_DID }}
+      ISSUER_REGISTRY_ADDRESS: ${{ secrets.ISSUER_REGISTRY_ADDRESS }}
+      REGISTRY_ADDRESS: ${{ secrets.REGISTRY_ADDRESS }}
+      DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:env
+
+  db-seed:
+    if: inputs.task == 'db-seed'
+    name: Seed data demo (DB production)
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL }}
+      EVIDENCE_ENC_KEY: ${{ secrets.EVIDENCE_ENC_KEY }}
+      CHAIN_ID: "97"
+      ISSUER_ADDRESS: ${{ secrets.ISSUER_ADDRESS }}
+      ISSUER_NAME: ${{ secrets.ISSUER_NAME || 'XYZ Community' }}
+      DEMO_USER_ADDRESS: ${{ inputs.demo_user_address }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Cek secret & input wajib
+        run: |
+          missing=0
+          for name in DATABASE_URL EVIDENCE_ENC_KEY ISSUER_ADDRESS DEMO_USER_ADDRESS; do
+            if [ -z "${!name}" ]; then echo "::error::$name belum diisi"; missing=1; fi
+          done
+          exit $missing
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @proven/db migrate:deploy
+      - run: pnpm db:seed
+
+  smoke-testnet:
+    if: inputs.task == 'smoke-testnet'
+    name: Smoke test baca-saja di BSC Testnet
+    runs-on: ubuntu-latest
+    env:
+      BSC_TESTNET_RPC_URL: ${{ secrets.BSC_TESTNET_RPC_URL }}
+      ISSUER_ADDRESS: ${{ secrets.ISSUER_ADDRESS }}
+      ISSUER_REGISTRY_ADDRESS: ${{ secrets.ISSUER_REGISTRY_ADDRESS }}
+      REGISTRY_ADDRESS: ${{ secrets.REGISTRY_ADDRESS }}
+      DEMO_CREDENTIAL_HASH: ${{ inputs.demo_credential_hash }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm smoke:testnet
