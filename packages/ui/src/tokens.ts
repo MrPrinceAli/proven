@@ -11,6 +11,7 @@ export const colors = {
     700: "#047857", // primary
     800: "#065F46", // primary hover
     900: "#064E3B",
+    950: "#022C22",
   },
   canvas: "#F4F2EE", // page background (warm grey)
   surface: "#FFFFFF",
@@ -33,6 +34,12 @@ export const tailwindPreset = {
       },
       boxShadow: {
         card: "0 0 0 1px rgb(0 0 0 / 0.04), 0 1px 2px rgb(0 0 0 / 0.06)",
+        glow: "0 0 0 1px rgb(255 255 255 / 0.08), 0 24px 80px -12px rgb(16 185 129 / 0.35)",
+        lift: "0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 32px -12px rgb(6 78 59 / 0.25)",
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "ui-serif", "Georgia", "serif"],
       },
     },
   },
