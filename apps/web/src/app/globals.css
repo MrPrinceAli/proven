@@ -9,3 +9,106 @@ body {
 :focus-visible {
   outline-color: theme("colors.brand.700");
 }
+
+@layer utilities {
+  /* Hairline grid used behind the landing hero. */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .mask-fade {
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, black 40%, transparent 100%);
+  }
+  .glass {
+    background: linear-gradient(145deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.04));
+    backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgb(255 255 255 / 0.14);
+  }
+  .text-shine {
+    background: linear-gradient(100deg, #a7f3d0 0%, #ffffff 35%, #6ee7b7 60%, #d1fae5 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shine 8s ease-in-out infinite;
+  }
+  .gradient-border {
+    background:
+      linear-gradient(theme("colors.white"), theme("colors.white")) padding-box,
+      linear-gradient(135deg, theme("colors.brand.200"), transparent 40%, theme("colors.brand.200"))
+        border-box;
+    border: 1px solid transparent;
+  }
+  .animate-float {
+    animation: float 7s ease-in-out infinite;
+  }
+  .animate-sweep {
+    animation: sweep 5s ease-in-out infinite;
+  }
+  .animate-pulse-ring {
+    animation: pulse-ring 2.4s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+  }
+  .animate-rise {
+    animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+@keyframes shine {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(-0.5deg);
+  }
+}
+@keyframes sweep {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+  }
+  60%,
+  100% {
+    transform: translateX(220%) skewX(-12deg);
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-shine,
+  .animate-float,
+  .animate-sweep,
+  .animate-pulse-ring,
+  .animate-rise {
+    animation: none;
+  }
+}

@@ -51,10 +51,10 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
       <header className="sticky top-0 z-30 border-b border-line bg-white">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <Link href="/dashboard" className="flex items-center gap-2" aria-label="Proven — Beranda">
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-700 text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-brand-700 text-white shadow-sm ring-1 ring-black/5">
               <IconShield className="h-5 w-5" />
             </span>
-            <span className="hidden text-lg font-bold text-brand-800 sm:inline">Proven</span>
+            <span className="hidden text-lg font-bold tracking-tight text-brand-950 sm:inline">Proven</span>
           </Link>
           <label className="relative hidden max-w-xs flex-1 md:block">
             <span className="sr-only">Cari profil</span>

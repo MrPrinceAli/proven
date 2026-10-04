@@ -1,122 +1,122 @@
 "use client";
 
-import { Card, IconAward, IconFile, IconGlobe, IconShield, IconSparkles, buttonClasses } from "@proven/ui";
+import { buttonClasses } from "@proven/ui";
 import Link from "next/link";
 import { DemoEntry } from "@/components/DemoEntry";
+import { CredentialMock } from "@/components/landing/CredentialMock";
+import { Logo } from "@/components/landing/Logo";
+import { Bento, CtaBand, LandingFooter, Steps, TrustStrip } from "@/components/landing/Sections";
 import { LoginButton } from "@/components/LoginButton";
 import { useSession } from "@/lib/session";
 import { site } from "@/lib/site";
 
-const STEPS = [
-  {
-    icon: IconFile,
-    title: "Create",
-    text: "Tulis klaim profesionalmu — prestasi, pengalaman, keahlian — lalu lampirkan bukti. File dienkripsi dan sidik jarinya (SHA-256) dicatat.",
-  },
-  {
-    icon: IconShield,
-    title: "Prove",
-    text: "Issuer yang terdaftar memeriksa bukti dan menerbitkan kredensial W3C. Hash-nya dicatat di BNB Smart Chain — tanpa data pribadi.",
-  },
-  {
-    icon: IconGlobe,
-    title: "Share",
-    text: "Bagikan profil, QR, atau CV PDF. Siapa pun bisa memverifikasi langsung dari blockchain, bahkan tanpa server Proven.",
-  },
-];
+const NAV_LINK =
+  "rounded-full px-3 py-1.5 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white";
 
 export default function HomePage() {
   const { data: me } = useSession();
-
   return (
     <div className="min-h-screen">
-      <header className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-        <span className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-700 text-white">
-            <IconShield className="h-5 w-5" />
-          </span>
-          <span className="text-lg font-bold text-brand-800">{site.name}</span>
-        </span>
-        <nav className="flex items-center gap-4 text-sm font-medium text-brand-700">
-          <Link href="/p/rina-demo" className="hover:underline">
-            Contoh profil
-          </Link>
-          <Link href="/verify" className="hover:underline">
-            Verifikasi kredensial
-          </Link>
-        </nav>
-      </header>
+      <div className="relative isolate overflow-hidden bg-brand-950 text-white">
+        {/* backdrop: hairline grid + aurora glows */}
+        <div aria-hidden className="bg-grid mask-fade absolute inset-0 -z-10" />
+        <div
+          aria-hidden
+          className="absolute -top-48 left-1/2 -z-10 h-[36rem] w-[64rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(16_185_129/0.35),transparent)]"
+        />
+        <div
+          aria-hidden
+          className="absolute -right-40 bottom-0 -z-10 h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(closest-side,rgb(45_212_191/0.18),transparent)]"
+        />
 
-      <main>
-        <section className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-4 pb-12 pt-10 text-center sm:pt-16">
-          <p className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-brand-800">
-            Identitas profesional terverifikasi
-          </p>
-          <h1 className="text-4xl font-bold leading-tight sm:text-5xl">{site.tagline}</h1>
-          <p className="max-w-xl text-lg text-muted">{site.description}</p>
-          {me ? (
-            <Link href="/dashboard" className={buttonClasses("primary", "px-6 py-3 text-base")}>
-              Buka dashboard
+        <header className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <Logo tone="dark" />
+          <nav aria-label="Utama" className="flex items-center gap-1">
+            <a href="#cara-kerja" className={`${NAV_LINK} hidden sm:inline-flex`}>
+              Cara kerja
+            </a>
+            <Link href="/p/rina-demo" className={`${NAV_LINK} hidden sm:inline-flex`}>
+              Contoh profil
             </Link>
-          ) : (
-            <LoginButton />
-          )}
-          {!me && <DemoEntry />}
-          <p className="text-xs text-muted">
-            Masuk dengan tanda tangan wallet (Sign-In with Ethereum) di BNB Smart Chain Testnet — gratis,
-            tanpa transaksi.
-          </p>
-        </section>
+            <Link href="/verify" className={NAV_LINK}>
+              Verifikasi kredensial
+            </Link>
+          </nav>
+        </header>
 
-        <section aria-labelledby="how" className="bg-white py-12">
-          <div className="mx-auto max-w-5xl px-4">
-            <h2 id="how" className="text-center text-2xl font-semibold">
-              Create → Prove → Share
-            </h2>
-            <ol className="mt-8 grid gap-4 md:grid-cols-3">
-              {STEPS.map(({ icon: Icon, title, text }, i) => (
-                <li key={title}>
-                  <Card className="h-full p-5">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-md bg-brand-50 text-brand-700">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <h3 className="mt-3 text-lg font-semibold">
-                      {i + 1}. {title}
-                    </h3>
-                    <p className="mt-1 text-sm text-muted">{text}</p>
-                  </Card>
-                </li>
-              ))}
-            </ol>
+        <main className="mx-auto grid max-w-6xl items-center gap-16 px-4 pb-24 pt-10 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:pb-32 lg:pt-16">
+          <div className="animate-rise">
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-emerald-200">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              Identitas profesional terverifikasi · live di BNB Chain
+            </p>
+            <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-[3.4rem] xl:text-[3.9rem]">
+              <span className="sr-only">{site.tagline}</span>
+              <span aria-hidden>
+                <span className="whitespace-nowrap">Anyone can claim</span>{" "}
+                <span className="whitespace-nowrap">a skill.</span>
+                <br />
+                <span className="text-white/60">Proven lets you </span>
+                <em className="whitespace-nowrap pr-1 font-display text-[1.12em] font-normal text-shine">
+                  prove it.
+                </em>
+              </span>
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/70">
+              Ubah klaim profesional menjadi kredensial yang ditandatangani issuer dan dicatat di blockchain —
+              bisa dicek siapa saja, kapan saja.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-start gap-3">
+              {me ? (
+                <Link href="/dashboard" className={buttonClasses("inverse", "h-12 px-6 text-base")}>
+                  Buka dashboard
+                </Link>
+              ) : (
+                <LoginButton tone="dark" />
+              )}
+              <Link
+                href="/p/rina-demo"
+                className="inline-flex h-12 items-center gap-2 rounded-full px-5 text-base font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
+              >
+                Lihat contoh profil <span aria-hidden>→</span>
+              </Link>
+            </div>
+
+            {!me && (
+              <div className="mt-8">
+                <DemoEntry tone="dark" />
+              </div>
+            )}
+            {!me && (
+              <p className="mt-4 text-xs text-white/40">
+                Login wallet memakai Sign-In with Ethereum: gratis, tanpa transaksi.
+              </p>
+            )}
           </div>
-        </section>
 
-        <section className="mx-auto grid max-w-5xl gap-4 px-4 py-12 md:grid-cols-2">
-          <Card className="p-5">
-            <h2 className="flex items-center gap-2 font-semibold">
-              <IconSparkles className="h-5 w-5 text-brand-700" /> AI yang jujur
-            </h2>
-            <p className="mt-2 text-sm text-muted">
-              Asisten AI menyusun ringkasan, CV, dan mencocokkan lowongan hanya dari data dan buktimu. Skill
-              tanpa bukti ditandai “Skill detected — evidence not found.”, tidak pernah ditambahkan. Status
-              Terverifikasi hanya dari issuer.
-            </p>
-          </Card>
-          <Card className="p-5">
-            <h2 className="flex items-center gap-2 font-semibold">
-              <IconAward className="h-5 w-5 text-brand-700" /> Tanpa data pribadi on-chain
-            </h2>
-            <p className="mt-2 text-sm text-muted">
-              Blockchain hanya menyimpan hash kredensial, alamat issuer, waktu, dan status pencabutan. Nama,
-              isi CV, dan file bukti tetap di luar chain dan terenkripsi.
-            </p>
-          </Card>
-        </section>
-      </main>
+          <CredentialMock />
+        </main>
+      </div>
 
-      <footer className="border-t border-line py-6 text-center text-xs text-muted">
-        Proven · Indonesia Web3 Hackathon Bali · BNB Smart Chain Testnet
-      </footer>
+      <TrustStrip />
+      <Steps />
+      <Bento />
+      <CtaBand>
+        <Link href="/p/rina-demo" className={buttonClasses("inverse", "h-12 px-6 text-base")}>
+          Jelajahi contoh profil
+        </Link>
+        <Link
+          href="/verify"
+          className="inline-flex h-12 items-center rounded-full border border-white/20 px-6 text-base font-semibold text-white transition hover:bg-white/10"
+        >
+          Verifikasi kredensial
+        </Link>
+      </CtaBand>
+      <LandingFooter />
     </div>
   );
 }

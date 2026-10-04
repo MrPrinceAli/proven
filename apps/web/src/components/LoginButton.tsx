@@ -27,7 +27,7 @@ function AppKitConnect({ onOpen }: { onOpen: (open: () => void) => void }) {
 }
 
 /** Connect wallet → nonce → sign EIP-4361 message → verify → /dashboard. */
-export function LoginButton() {
+export function LoginButton({ tone = "light" }: { tone?: "light" | "dark" } = {}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { address, chainId, isConnected } = useAccount();
@@ -109,13 +109,19 @@ export function LoginButton() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className={`flex flex-col gap-2 ${tone === "dark" ? "items-start" : "items-center"}`}>
       {hasAppKit && mounted && <AppKitConnect onOpen={(open) => (openModal.current = open)} />}
-      <Button onClick={onClick} disabled={step !== "idle"} aria-busy={step !== "idle"}>
+      <Button
+        variant={tone === "dark" ? "inverse" : "primary"}
+        className={tone === "dark" ? "h-12 px-6 text-base" : undefined}
+        onClick={onClick}
+        disabled={step !== "idle"}
+        aria-busy={step !== "idle"}
+      >
         {STEP_LABEL[step]}
       </Button>
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className={`text-sm ${tone === "dark" ? "text-red-200" : "text-red-700"}`}>
           {error}
         </p>
       )}

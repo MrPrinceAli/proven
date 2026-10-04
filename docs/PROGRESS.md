@@ -246,3 +246,5 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 **Opsional tersisa:** AI Claude asli (`LLM_PROVIDER=anthropic`, `LLM_API_KEY` di Vercel), verifikasi source kontrak di BscScan (`ETHERSCAN_API_KEY`), OpenAPI, mint SBT.
 
 **Domain (2026-10-04):** production pindah ke **https://proven-id.vercel.app**; `proven-zeta.vercel.app` dialihkan permanen (308). `APP_DOMAIN`/`APP_URL` diperbarui. VC yang sudah terbit tetap valid (URL status di dalamnya ikut dialihkan).
+
+**Redesign landing (2026-10-04):** hero gelap emerald (grid halus + aurora glow), kartu kredensial glassmorphism yang melayang, tipografi Plus Jakarta Sans + aksen Instrument Serif italic, strip standar terbuka, langkah Create → Prove → Share, bento keunggulan (verifikasi independen, AI jujur, nol PII on-chain, issuer = otoritas, satu tautan), CTA band, dan footer. Animasi dimatikan saat `prefers-reduced-motion`. Logo baru juga dipakai di header aplikasi dan halaman publik.
