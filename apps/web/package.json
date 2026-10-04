@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "build:vercel": "node ../../packages/db/scripts/migrate-deploy.mjs && next build",
+    "build:vercel": "node ../../packages/db/scripts/migrate-deploy.mjs && pnpm --dir ../api run data:heal && next build",
     "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json",

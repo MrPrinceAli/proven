@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { seedDemo } from "../src/seed/demo";
+import { healShowcase, seedDemo } from "../src/seed/demo";
 import { hasDatabase, loginAs, newAccount, resetDatabase, testApp, testPrisma } from "./helpers";
 
 describe.skipIf(!hasDatabase)("pnpm db:seed (§W8 2)", () => {
@@ -71,6 +71,33 @@ describe.skipIf(!hasDatabase)("pnpm db:seed (§W8 2)", () => {
       displayName: "Arya Pratama",
       avatarSeed: "pv-0",
     });
+  });
+
+  it("regenerates an old showcase certificate for the persona, keeping links and custody", async () => {
+    const { userId } = await seedDemo(input());
+    const db = testPrisma();
+    const before = await db.evidence.findFirstOrThrow();
+    const { recipient: _old, ...legacyMeta } = before.metadata as Record<string, unknown>;
+    await db.evidence.update({ where: { id: before.id }, data: { metadata: legacyMeta as object } });
+
+    expect((await healShowcase(db, input().evidenceKey, "XYZ Community")).changed).toBe(true);
+    const after = await db.evidence.findUniqueOrThrow({ where: { id: before.id } });
+    const meta = after.metadata as { recipient: string; custody: { event: string }[] };
+    expect(meta.recipient).toBe("Arya Pratama");
+    expect(meta.custody.map((c) => c.event)).toEqual(["uploaded", "regenerated"]);
+    expect(after.storageKey).not.toBe(before.storageKey);
+    expect((meta.custody.at(-1) as { sha256?: string }).sha256).toBe(
+      Buffer.from(after.sha256).toString("hex"),
+    );
+    expect(await db.evidenceBlob.count()).toBe(1);
+    expect(await db.evidenceLink.count({ where: { evidenceId: before.id } })).toBe(2);
+    expect(await db.auditLog.count({ where: { action: "evidence.regenerated", entityId: before.id } })).toBe(
+      1,
+    );
+    expect(userId).toBe(after.userId);
+
+    // Idempotent: a second run changes nothing.
+    expect((await healShowcase(db, input().evidenceKey, "XYZ Community")).changed).toBe(false);
   });
 
   it("runs inside the deployment through the admin-only endpoint", async () => {

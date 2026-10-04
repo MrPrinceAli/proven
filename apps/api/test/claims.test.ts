@@ -37,13 +37,13 @@ describe.skipIf(!hasDatabase)("profile and claims API", () => {
         headline: "Smart Contract Engineer",
         summary: "Membangun dApp di BNB Chain.",
         visibility: "private",
-        slug: "Rina-Dev",
+        slug: "Arya-Dev",
       });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toMatchObject({
         headline: "Smart Contract Engineer",
         visibility: "private",
-        slug: "rina-dev",
+        slug: "arya-dev",
       });
     });
 
@@ -58,22 +58,22 @@ describe.skipIf(!hasDatabase)("profile and claims API", () => {
       expect((await patchProfile(cookies, { avatarSeed: "<svg>" })).statusCode).toBe(400);
     });
 
-    it("treats slugs case-insensitively: 'Rina' conflicts with 'rina'", async () => {
+    it("treats slugs case-insensitively: 'Arya' conflicts with 'arya'", async () => {
       const a = await loginAs(app);
       const b = await loginAs(app);
-      expect((await patchProfile(a.cookies, { slug: "rina" })).statusCode).toBe(200);
-      const res = await patchProfile(b.cookies, { slug: "Rina" });
+      expect((await patchProfile(a.cookies, { slug: "arya" })).statusCode).toBe(200);
+      const res = await patchProfile(b.cookies, { slug: "Arya" });
       expect(res.statusCode).toBe(409);
       expect(res.json().type).toBe("https://proven.app/problems/conflict");
     });
 
     it("lets a user keep their own slug", async () => {
       const { cookies } = await loginAs(app);
-      await patchProfile(cookies, { slug: "rina" });
-      expect((await patchProfile(cookies, { slug: "RINA", headline: "x" })).statusCode).toBe(200);
+      await patchProfile(cookies, { slug: "arya" });
+      expect((await patchProfile(cookies, { slug: "ARYA", headline: "x" })).statusCode).toBe(200);
     });
 
-    it.each(["ab", "-rina", "rina-", "rina_dev", "a".repeat(41), "admin", "verify", "p", "dashboard"])(
+    it.each(["ab", "-arya", "arya-", "arya_dev", "a".repeat(41), "admin", "verify", "p", "dashboard"])(
       "rejects invalid or reserved slug %s",
       async (slug) => {
         const { cookies } = await loginAs(app);

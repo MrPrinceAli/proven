@@ -256,3 +256,5 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 **Navigasi (2026-10-04):** menu akun (avatar → profil publik, ubah profil, dashboard issuer, verifikasi, halaman utama, keluar), header halaman publik tahu status login (Dashboard / Masuk), landing punya tombol Dashboard/Mulai + menu mobile, kotak "Buka profil" di header aplikasi berfungsi (lompat ke `/p/slug`), tombol kembali di detail verifikasi dan detail permintaan issuer (mobile), halaman error/404/akses-ditolak kini punya jalan keluar.
 
 **Logo (2026-10-04):** dipilih opsi #9 "Node P" (huruf P dengan node terverifikasi) dari kanvas 10 opsi; dipakai di semua header dan favicon. Migrasi data `20261004040000_showcase_persona` memindahkan profil pajangan ke `arya-pratama` dan memberi nama + avatar ke sandbox demo lama secara otomatis saat deploy.
+
+**Sertifikat pajangan (2026-10-04):** sertifikat PDF profil Arya Pratama dibuat ulang atas nama persona (bukan lagi "@rina-demo") oleh langkah build `data:heal` (idempoten, baris evidence yang sama, hash baru dicatat di chain of custody + audit `evidence.regenerated`). Data uji juga tidak lagi memakai nama "rina".

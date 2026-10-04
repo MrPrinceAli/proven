@@ -20,7 +20,7 @@ describe.skipIf(!url)("database schema (DATABASE_URL_TEST)", () => {
   afterAll(() => prisma.$disconnect());
 
   it("treats slugs case-insensitively (citext)", async () => {
-    const a = await prisma.user.create({ data: { profile: { create: { slug: `Rina-${Date.now()}` } } } });
+    const a = await prisma.user.create({ data: { profile: { create: { slug: `Arya-${Date.now()}` } } } });
     const profile = await prisma.profile.findUnique({ where: { userId: a.id } });
     const found = await prisma.profile.findFirst({ where: { slug: profile!.slug!.toLowerCase() } });
     expect(found?.userId).toBe(a.id);
