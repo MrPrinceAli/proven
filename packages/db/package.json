@@ -9,11 +9,24 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "eslint src --ext .ts",
+    "postinstall": "prisma generate",
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:test": "node scripts/migrate-test.mjs",
+    "seed": "tsx prisma/seed.ts",
+    "lint": "eslint src prisma --ext .ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "node scripts/migrate-test.mjs && vitest run"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "prisma": "5.22.0",
+    "zod": "3.25.76"
   },
   "devDependencies": {
+    "@types/node": "22.20.5",
+    "tsx": "^4.20.0",
     "typescript": "5.4.5",
     "vitest": "^3.2.4"
   }

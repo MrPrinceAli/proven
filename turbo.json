@@ -29,6 +29,10 @@
     "typecheck": {},
     "test": {
       "cache": false
+    },
+    "@proven/api#test": {
+      "dependsOn": ["@proven/db#test"],
+      "cache": false
     }
   }
 }

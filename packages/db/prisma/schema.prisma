@@ -1,0 +1,328 @@
+// Prisma schema = DDL docs/PROVEN-WAVES.md §S6.2 + §S6.3.
+// Table/column names are snake_case via @@map/@map; models are PascalCase/camelCase.
+// Status/visibility/state columns stay `text` (as in the DDL) and are validated with Zod (D-016).
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DATABASE_URL_UNPOOLED")
+  extensions = [citext]
+}
+
+// ===== IDENTITAS =====
+
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String?  @unique @db.Citext
+  authProvider String   @default("wallet") @map("auth_provider")
+  status       String   @default("active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  wallets              Wallet[]
+  profile              Profile?
+  skills               Skill[]
+  experiences          Experience[]
+  projects             Project[]
+  achievements         Achievement[]
+  communityRoles       CommunityRole[]
+  evidence             Evidence[]
+  verificationRequests VerificationRequest[]
+  credentials          Credential[]
+  consents             Consent[]
+  sessions             Session[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  address    String // EIP-55
+  chainId    Int       @map("chain_id")
+  did        String    @unique // did:ethr:{chainId}:{address lowercase}
+  verifiedAt DateTime? @map("verified_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, address, chainId])
+  @@map("wallets")
+}
+
+// ===== PROFIL =====
+
+model Profile {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @unique @map("user_id") @db.Uuid
+  headline   String   @default("")
+  summary    String   @default("")
+  visibility String   @default("public") // public | private | recruiter-only
+  slug       String?  @unique @db.Citext
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Skill {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  level       String? // beginner | intermediate | advanced | expert
+  status      String   @default("UNVERIFIED")
+  evidenceIds String[] @default([]) @map("evidence_ids") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("skills")
+}
+
+model Experience {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  title       String
+  org         String
+  startDate   DateTime? @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+  description String?
+  status      String    @default("UNVERIFIED")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("experiences")
+}
+
+model Project {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  url         String?
+  description String?
+  status      String   @default("UNVERIFIED")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("projects")
+}
+
+model Achievement {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String
+  event     String?
+  year      Int?
+  status    String   @default("UNVERIFIED")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("achievements")
+}
+
+model CommunityRole {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  community String
+  role      String?
+  status    String   @default("UNVERIFIED")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("community_roles")
+}
+
+// ===== EVIDENCE =====
+
+model Evidence {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  type         String // enum FR-05
+  storageKey   String   @map("storage_key") // "pg:{evidence_blobs.id}" (D-004)
+  sha256       Bytes // hash of the plaintext
+  mimeType     String?  @map("mime_type")
+  sizeBytes    BigInt?  @map("size_bytes")
+  aiType       String?  @map("ai_type")
+  aiConfidence Decimal? @map("ai_confidence") @db.Decimal(3, 2)
+  capturedAt   DateTime @default(now()) @map("captured_at") @db.Timestamptz(6)
+  metadata     Json     @default("{}") // title, description, iv, tag, custody[]
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links EvidenceLink[]
+
+  @@map("evidence")
+}
+
+model EvidenceLink {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  evidenceId String @map("evidence_id") @db.Uuid
+  entityType String @map("entity_type") // skill | experience | project | achievement | community_role
+  entityId   String @map("entity_id") @db.Uuid
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+  @@map("evidence_links")
+}
+
+// Ciphertext evidence in Postgres (D-004). iv & tag live in evidence.metadata.
+model EvidenceBlob {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ciphertext Bytes
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("evidence_blobs")
+}
+
+// ===== ISSUER & KREDENSIAL =====
+
+model Issuer {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  did           String   @unique
+  address       String   @unique // EIP-55
+  domain        String?
+  accreditation String?
+  verified      Boolean  @default(false)
+  apiKeyHash    Bytes?   @map("api_key_hash")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  verificationRequests VerificationRequest[]
+  credentials          Credential[]
+
+  @@map("issuers")
+}
+
+model VerificationRequest {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entityType        String    @map("entity_type")
+  entityId          String    @map("entity_id") @db.Uuid
+  issuerId          String    @map("issuer_id") @db.Uuid
+  requestedBy       String    @map("requested_by") @db.Uuid
+  state             String    @default("pending") // pending | approved | rejected
+  evidenceIds       String[]  @default([]) @map("evidence_ids") @db.Uuid
+  decidedAt         DateTime? @map("decided_at") @db.Timestamptz(6)
+  // Draft VC so a retried approve re-anchors the same hash (D-010).
+  draftVc           Json?     @map("draft_vc")
+  draftCredentialId String?   @map("draft_credential_id") @db.Uuid
+  draftStatusIndex  Int?      @map("draft_status_index")
+
+  issuer    Issuer @relation(fields: [issuerId], references: [id])
+  requester User   @relation(fields: [requestedBy], references: [id])
+
+  @@index([issuerId, state])
+  @@map("verification_requests")
+}
+
+model Credential {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // VC id = "urn:uuid:" + id
+  issuerId      String    @map("issuer_id") @db.Uuid
+  subjectUserId String    @map("subject_user_id") @db.Uuid
+  type          String[]
+  vcJson        Json      @map("vc_json") // full VC including proof
+  vcHash        Bytes     @map("vc_hash") // sha256(JCS(vc without proof))
+  status        String    @default("active") // active | expired | revoked
+  issuedAt      DateTime  @default(now()) @map("issued_at") @db.Timestamptz(6)
+  expiresAt     DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  issuer       Issuer            @relation(fields: [issuerId], references: [id])
+  subject      User              @relation(fields: [subjectUserId], references: [id])
+  statusEntry  CredentialStatus?
+  chainAnchors ChainAnchor[]
+
+  @@map("credentials")
+}
+
+model CredentialStatus {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  credentialId    String    @unique @map("credential_id") @db.Uuid
+  statusListIndex Int       @map("status_list_index")
+  revoked         Boolean   @default(false)
+  revokedAt       DateTime? @map("revoked_at") @db.Timestamptz(6)
+  reason          String?
+
+  credential Credential @relation(fields: [credentialId], references: [id])
+
+  @@map("credential_status")
+}
+
+model ChainAnchor {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  credentialId    String   @map("credential_id") @db.Uuid
+  txHash          String   @map("tx_hash")
+  chainId         Int      @map("chain_id")
+  blockNumber     BigInt?  @map("block_number")
+  contractAddress String   @map("contract_address")
+  anchorHash      Bytes    @map("anchor_hash")
+  anchoredAt      DateTime @default(now()) @map("anchored_at") @db.Timestamptz(6)
+
+  credential Credential @relation(fields: [credentialId], references: [id])
+
+  @@map("chain_anchors")
+}
+
+// ===== GOVERNANCE =====
+
+model Consent {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  purpose     String
+  granted     Boolean   @default(false)
+  grantedAt   DateTime? @map("granted_at") @db.Timestamptz(6)
+  withdrawnAt DateTime? @map("withdrawn_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("consents")
+}
+
+// Append-only: the application only ever inserts.
+model AuditLog {
+  id         BigInt   @id @default(autoincrement())
+  actorType  String?  @map("actor_type")
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id") @db.Uuid
+  before     Json?
+  after      Json?
+  ip         String?  @db.Inet
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("audit_logs")
+}
+
+// ===== AUTH (§S6.3) =====
+
+model SiweNonce {
+  nonce     String    @id
+  address   String // EIP-55
+  chainId   Int       @map("chain_id")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("siwe_nonces")
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash Bytes    @unique @map("token_hash") // sha256(cookie token)
+  address   String
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}

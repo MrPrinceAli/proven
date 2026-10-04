@@ -1,2 +1,4 @@
-/** Placeholder sampai gelombang yang mengisi paket ini. */
-export const packageName = "@proven/db" as const;
+export { createPrismaClient, getPrisma } from "./client";
+export * from "./enums";
+export { Prisma, PrismaClient } from "@prisma/client";
+export type * from "@prisma/client";

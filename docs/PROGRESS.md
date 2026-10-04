@@ -5,8 +5,8 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
 | Gelombang | Status | Branch / PR |
 |---|---|---|
 | W0 Fondasi Monorepo | ✅ selesai — CI hijau, preview Vercel jalan | `w0-monorepo-foundation` · PR #1 |
-| W1 Smart Contracts | ✅ selesai (deploy testnet menunggu langkah manual) | `w1-smart-contracts` |
-| W2 Auth & Database | ⏳ belum | — |
+| W1 Smart Contracts | ✅ selesai — CI hijau (deploy testnet menunggu langkah manual) | `w1-smart-contracts` · PR #2 |
+| W2 Auth & Database | ✅ selesai (login di preview menunggu Neon) | `w2-auth-database` |
 | W3 Profil & Evidence | ⏳ belum | — |
 | W4–W8 | ⏳ belum | — |
 
@@ -57,3 +57,25 @@ Status per gelombang. Rencana: `docs/PROVEN-WAVES.md`. Keputusan: `docs/DECISION
    `DEPLOYER_PRIVATE_KEY`, `ISSUER_ADDRESS` (EIP-55), `ISSUER_DID` (`did:ethr:97:<address huruf kecil>`), opsional `ISSUER_NAME`, `ETHERSCAN_API_KEY`, `BSC_TESTNET_RPC_URL`.
 5. Actions → **ops** → Run workflow → `deploy-contracts` (dari branch `main` setelah PR W1 di-merge).
 6. Salin 3 address dari ringkasan run ke Vercel → Environment Variables: `ISSUER_REGISTRY_ADDRESS`, `REGISTRY_ADDRESS`, `CREDENTIAL_SBT_ADDRESS`, `NEXT_PUBLIC_REGISTRY_ADDRESS`.
+
+---
+
+## W2 — Auth & Database (2026-10-04)
+
+**Selesai**
+- `packages/db`: Prisma 5.22 schema = DDL §S6.2 + §S6.3 (20 tabel, `citext`, `@@map` snake_case, termasuk `evidence_blobs` dan kolom draft VC), migrasi awal + trigger yang membuat `audit_logs` append-only di level DB, client singleton, enum Zod (D-016). Test: citext case-insensitive, trigger append-only.
+- `apps/api`: config Zod gagal-cepat (`loadConfig`), error RFC 9457 (`problem.ts`, termasuk 404/400/429), `@fastify/cookie` (cookie sesi ditandatangani `SESSION_SECRET`), helmet, CORS, rate-limit, helper `audit()`.
+- SIWE (FR-01): `POST /auth/siwe/nonce` (EIP-55 wajib, chainId = `CHAIN_ID`, nonce 128-bit, 5 menit), `POST /auth/siwe/verify` (domain & origin dari daftar D-007, chainId, waktu, nonce terikat address+chain, tanda tangan D-017, konsumsi nonce atomik, upsert user+wallet+profile, sesi 7 hari dengan `sha256(token)`), `POST /auth/logout`, `GET /me` (+ roles user/issuer/admin). Guard `requireUser`/`requireIssuer`/`requireAdmin`.
+- 29 test API, termasuk 8 test wajib SIWE: replay, nonce kedaluwarsa, domain salah, chainId salah, address tidak cocok, address non-checksum, sesi valid → `/me` 200, logout → `/me` 401. Ditambah: uri origin, tanda tangan palsu, pesan kedaluwarsa, cookie dirusak, audit log, roles.
+- `apps/web`: wagmi + Reown AppKit (fallback MetaMask bila Project ID kosong, D-018), alur login connect → nonce → sign → verify → `/dashboard`, `useSession()`, header (nav, DID singkat, Keluar), route guard client, halaman placeholder `/dashboard/*`, `/issuer`, `/p/[slug]`, `/verify`, `/verify/[id]`.
+- Diverifikasi lokal dengan `next start` + Postgres: login SIWE lewat HTTP → 200 + cookie `HttpOnly; Secure; SameSite=Lax`, `/api/me` 200 (`did:ethr:97:…`), logout 204 → `/api/me` 401.
+- Vercel: Build Command `pnpm run build:vercel` (migrasi lalu build, D-019); env Production + Preview diisi: `SESSION_SECRET`, `EVIDENCE_ENC_KEY` (secret, digenerate langsung ke Vercel), `CHAIN_ID`, `RPC_URL`, `APP_DOMAIN`, `APP_URL`, `NEXT_PUBLIC_CHAIN_ID`, `NEXT_PUBLIC_RPC_URL`, `NEXT_PUBLIC_EXPLORER_URL`, `LLM_PROVIDER`.
+
+**Tertunda**
+- Database di Vercel: integrasi Neon butuh persetujuan syarat layanan di browser. Sampai tersambung, `/api/*` di Vercel menjawab 503 dengan pesan `DATABASE_URL: Required`.
+
+**Langkah manual untuk user**
+1. Vercel → project **proven** → tab **Storage** → **Create Database** → pilih **Neon** (Serverless Postgres) → paket **Free** → setujui syarat → Connect ke project `proven` untuk **Production + Preview** (aktifkan opsi branch per preview bila ditawarkan). `DATABASE_URL` dan `DATABASE_URL_UNPOOLED` terisi otomatis.
+2. Redeploy (Deployments → ⋯ → Redeploy) atau push commit baru.
+3. Opsional: buat Project ID gratis di cloud.reown.com (tambahkan domain `*.vercel.app`) → Vercel Env `NEXT_PUBLIC_REOWN_PROJECT_ID`. Tanpa ini login tetap bisa memakai MetaMask.
+4. MetaMask → tambahkan jaringan BNB Smart Chain Testnet (chainId 97). Login tidak butuh tBNB.
