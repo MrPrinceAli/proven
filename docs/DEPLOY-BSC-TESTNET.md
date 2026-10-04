@@ -67,6 +67,11 @@ Actions → ops → `check-env` → semua ✅.
 
 ## 8. Data demo
 
+Cara termudah (D-031): login sebagai admin (address di `ADMIN_ADDRESSES`) lalu panggil
+`POST /api/admin/seed-demo` dengan `{"demoUserAddress": "<address MetaMask demo>"}` — seed berjalan di dalam Vercel.
+
+Alternatif lewat GitHub Actions:
+
 Butuh dua GitHub Secret tambahan: `DATABASE_URL` (connection string Neon production — Neon console → project →
 Connection string) dan `EVIDENCE_ENC_KEY` (**harus sama** dengan yang di Vercel; karena di Vercel tersimpan Sensitive,
 buat nilai baru dengan `openssl rand -base64 32` lalu isi di **kedua** tempat, kemudian redeploy).

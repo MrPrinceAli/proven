@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { seedDemo } from "../src/seed/demo";
-import { hasDatabase, resetDatabase, testPrisma } from "./helpers";
+import { hasDatabase, loginAs, newAccount, resetDatabase, testApp, testPrisma } from "./helpers";
 
 describe.skipIf(!hasDatabase)("pnpm db:seed (§W8 2)", () => {
   const input = () => ({
@@ -52,5 +52,32 @@ describe.skipIf(!hasDatabase)("pnpm db:seed (§W8 2)", () => {
     expect(await db.evidence.count()).toBe(1);
     expect(await db.evidenceLink.count()).toBe(2);
     expect(await db.verificationRequest.count()).toBe(1);
+  });
+
+  it("runs inside the deployment through the admin-only endpoint", async () => {
+    const admin = newAccount();
+    const issuer = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+    const app = await testApp({
+      config: { ADMIN_ADDRESSES: admin.address, ISSUER_ADDRESS: issuer, ISSUER_NAME: "XYZ Community" },
+    });
+    try {
+      const body = { demoUserAddress: "0x90F79bf6EB2c4f870365E785982E1f101E93b906" };
+      const user = await loginAs(app);
+      expect(
+        (await app.inject({ method: "POST", url: "/admin/seed-demo", cookies: user.cookies, payload: body }))
+          .statusCode,
+      ).toBe(403);
+
+      const { cookies } = await loginAs(app, admin);
+      const res = await app.inject({ method: "POST", url: "/admin/seed-demo", cookies, payload: body });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({
+        slug: "rina-demo",
+        did: "did:ethr:97:0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+      });
+      expect(await testPrisma().verificationRequest.count({ where: { state: "pending" } })).toBe(1);
+    } finally {
+      await app.close();
+    }
   });
 });
