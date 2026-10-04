@@ -17,6 +17,7 @@ import { evidenceRoutes, MAX_EVIDENCE_BYTES } from "./routes/evidence";
 import { meRoutes } from "./routes/me";
 import { publicRoutes } from "./routes/public";
 import { verificationRoutes } from "./routes/verification";
+import { verifyRoutes } from "./routes/verify";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -89,6 +90,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(publicRoutes);
   await app.register(verificationRoutes);
   await app.register(aiRoutes);
+  await app.register(verifyRoutes);
 
   return app;
 }

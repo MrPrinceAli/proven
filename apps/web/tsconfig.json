@@ -3,11 +3,17 @@
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
-    "allowJs": false,
+    "allowJs": true,
     "incremental": true,
-    "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./src/*"] }
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["next-env.d.ts", "src", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "src", ".next/types/**/*.ts", "e2e", "playwright.config.ts"],
   "exclude": ["node_modules"]
 }

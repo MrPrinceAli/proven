@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { CLAIM_KIND_LIST, linkedEvidence } from "../claims";
 import { problem } from "../problem";
+import { publicCredentials } from "./verify";
 
 const SlugParam = z.object({ slug: z.string().min(1).max(64) });
 
@@ -50,6 +51,7 @@ export async function publicRoutes(app: FastifyInstance) {
       summary: profile.summary,
       did: wallet ? truncateDid(wallet.did) : null,
       claims,
+      credentials: await publicCredentials(app, profile.userId),
     };
   });
 }

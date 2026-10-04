@@ -395,4 +395,122 @@ describe.skipIf(!anvilReady)("issuer flow: request → approve → anchor → re
       await offline.close();
     }
   });
+
+  describe("public verification (FR-13, §W7)", () => {
+    async function issued() {
+      const user = await userWithClaim();
+      const requestId = (await submit(user)).json().id;
+      const issuer = await loginIssuer();
+      const approved = (
+        await app.inject({
+          method: "POST",
+          url: `/issuer/verification-requests/${requestId}/approve`,
+          cookies: issuer.cookies,
+        })
+      ).json();
+      return { user, issuer, approved, uuid: approved.credentialId.replace("urn:uuid:", "") as string };
+    }
+
+    it("serves an active credential by urn or uuid without a login", async () => {
+      const { approved, uuid, user } = await issued();
+      const byUrn = await app.inject({
+        method: "GET",
+        url: `/verify/${encodeURIComponent(approved.credentialId)}`,
+      });
+      expect(byUrn.statusCode).toBe(200);
+      expect(byUrn.json()).toMatchObject({
+        credentialId: approved.credentialId,
+        issuer: ISSUER.name,
+        issuerDid: ISSUER.did,
+        subject: `did:ethr:${CHAIN_ID}:${user.account.address.toLowerCase()}`,
+        anchor: {
+          txHash: approved.txHash,
+          block: approved.blockNumber,
+          contract: deployment.credentialRegistry,
+          chainId: CHAIN_ID,
+        },
+        status: "active",
+        revoked: false,
+        chainChecked: true,
+      });
+      expect(byUrn.json().vc.proof.type).toBe("DataIntegrityProof");
+      expect((await app.inject({ method: "GET", url: `/verify/${uuid}` })).json().status).toBe("active");
+
+      const status = await app.inject({ method: "GET", url: `/credentials/${uuid}/status` });
+      expect(status.json()).toMatchObject({
+        status: "active",
+        revoked: false,
+        checkedAt: expect.any(String),
+      });
+    });
+
+    it("shows a revocation made through Proven immediately", async () => {
+      const { issuer, uuid } = await issued();
+      expect((await app.inject({ method: "GET", url: `/verify/${uuid}` })).json().status).toBe("active");
+      await app.inject({
+        method: "POST",
+        url: `/issuer/credentials/${uuid}/revoke`,
+        cookies: issuer.cookies,
+        payload: { reason: "Dicabut untuk uji" },
+      });
+      expect((await app.inject({ method: "GET", url: `/verify/${uuid}` })).json()).toMatchObject({
+        status: "revoked",
+        revoked: true,
+      });
+    });
+
+    it("trusts the chain over the DB and syncs the DB when they differ", async () => {
+      const { uuid, approved, user } = await issued();
+      // Revoke directly on-chain, bypassing Proven's API and DB.
+      await chain.revokeCredential(approved.vcHash);
+      const res = (await app.inject({ method: "GET", url: `/verify/${uuid}` })).json();
+      expect(res).toMatchObject({ status: "revoked", revoked: true, chainChecked: true });
+
+      const row = await testPrisma().credential.findUniqueOrThrow({
+        where: { id: uuid },
+        include: { statusEntry: true },
+      });
+      expect(row.status).toBe("revoked");
+      expect(row.statusEntry?.revoked).toBe(true);
+      expect(await achievementStatus(user)).toBe("REVOKED");
+      expect(await testPrisma().auditLog.count({ where: { action: "credential.synced" } })).toBe(1);
+    });
+
+    it("answers 404 for unknown and 400 for malformed ids", async () => {
+      expect((await app.inject({ method: "GET", url: `/verify/${crypto.randomUUID()}` })).statusCode).toBe(
+        404,
+      );
+      expect((await app.inject({ method: "GET", url: "/verify/not-a-uuid" })).statusCode).toBe(400);
+    });
+
+    it("lists credentials on the public profile and in the data export", async () => {
+      const { user, approved } = await issued();
+      await app.inject({
+        method: "PATCH",
+        url: "/me/profile",
+        cookies: user.cookies,
+        payload: { slug: "juara-xyz" },
+      });
+      const profile = (await app.inject({ method: "GET", url: "/p/juara-xyz" })).json();
+      expect(profile.credentials).toEqual([
+        expect.objectContaining({
+          credentialId: approved.credentialId,
+          name: "XYZ Hackathon 2026 — Winner",
+          status: "active",
+        }),
+      ]);
+
+      const exported = await app.inject({ method: "GET", url: "/me/data-export", cookies: user.cookies });
+      expect(exported.statusCode).toBe(200);
+      expect(exported.headers["content-disposition"]).toContain("attachment");
+      const data = exported.json();
+      expect(data.credentials[0]).toMatchObject({
+        credentialId: approved.credentialId,
+        vcHash: approved.vcHash,
+      });
+      expect(data.evidence[0]).toMatchObject({ sha256: user.evidence.sha256 });
+      expect(exported.body).not.toMatch(/ciphertext|storage_?key|"pg:/i);
+      expect((await app.inject({ method: "GET", url: "/me/data-export" })).statusCode).toBe(401);
+    });
+  });
 });
